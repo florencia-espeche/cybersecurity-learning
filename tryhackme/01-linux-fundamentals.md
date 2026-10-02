@@ -544,6 +544,222 @@ Aunque requiere bastante más tiempo para aprenderlo, ofrece ventajas importante
 | Resaltado de sintaxis| Básico            | Completo                  |
 | Ideal para           | Ediciones rápidas | Programar y uso intensivo |
 
+## Descarga de archivos con `wget`
+
+Este comando permite descargar archivos de la web mediante HTTP, igual que si accedieras al archivo desde tu navegador. Solo necesitas indicar la dirección del recurso que quieres descargar. Por ejemplo, si quisieras descargar un archivo llamado `myfile.txt` y conocieras su dirección web, el comando sería así:
+
+```bash
+wget https://assets.tryhackme.com/additional/linux-fundamentals/part3/myfile.txt
+```
+---
+
+## Transferir archivos desde tu equipo con SCP (SSH)
+
+**SCP** (*Secure Copy*) es, como su nombre indica, una forma segura de copiar archivos. A diferencia del comando `cp`, que trabaja de forma local, `scp` permite transferir archivos entre dos equipos usando el protocolo SSH, que proporciona tanto autenticación como cifrado.
+
+SCP funciona con un modelo de **ORIGEN** y **DESTINO**, y permite:
+
+- Copiar archivos y directorios desde tu sistema actual a un sistema remoto.
+- Copiar archivos y directorios desde un sistema remoto a tu sistema actual.
+
+Para ello, es necesario conocer las credenciales (usuario y contraseña) de un usuario en el sistema local y de otro en el sistema remoto.
+
+### Ejemplo 1: copiar un archivo del equipo local al remoto
+
+Usaremos los siguientes datos:
+
+| Variable                                               | Valor          |
+| ------------------------------------------------------ | -------------- |
+| Dirección IP del sistema remoto                        | `192.168.1.30` |
+| Usuario en el sistema remoto                           | `ubuntu`       |
+| Nombre del archivo en el sistema local                 | `important.txt` |
+| Nombre con el que se guardará en el sistema remoto     | `transferred.txt` |
+
+Con esta información, armamos el comando recordando que el formato de SCP es simplemente ORIGEN y DESTINO:
+
+```bash
+scp important.txt ubuntu@192.168.1.30:/home/ubuntu/transferred.txt
+```
+
+### Ejemplo 2: copiar un archivo del equipo remoto al local
+
+Ahora hagamos lo inverso: copiar un archivo desde un equipo remoto en el que no hemos iniciado sesión.
+
+| Variable                                               | Valor          |
+| ------------------------------------------------------ | -------------- |
+| Dirección IP del sistema remoto                        | `192.168.1.30` |
+| Usuario en el sistema remoto                           | `ubuntu`       |
+| Nombre del archivo en el sistema remoto                | `documents.txt` |
+| Nombre con el que se guardará en nuestro sistema       | `notes.txt`    |
+
+El comando queda así:
+
+```bash
+scp ubuntu@192.168.1.30:/home/ubuntu/documents.txt notes.txt
+```
+---
+
+## Compartir archivos desde tu equipo con un servidor web
+
+Las máquinas Ubuntu vienen con `python3` preinstalado. Python incluye un módulo ligero y fácil de usar llamado `http.server` (*HTTPServer*), que convierte tu equipo en un servidor web básico. Con él puedes compartir tus propios archivos para que otro equipo los descargue con herramientas como `curl` o `wget`.
+
+Por defecto, el servidor comparte los archivos del directorio desde el que ejecutas el comando, aunque esto se puede cambiar con las opciones descritas en las páginas del manual. Para iniciar el módulo, basta con ejecutar en la terminal:
+
+```bash
+python3 -m http.server
+```
+
+En el siguiente ejemplo se comparte un directorio llamado `webserver`, que contiene un único archivo llamado `file`:
+
+**Iniciar un servidor web con Python**
+
+```bash
+tryhackme@linux3:/webserver# python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+```
+
+Ahora usemos `wget` para descargar el archivo indicando la dirección `MACHINE_IP` y el nombre del archivo. Como el servidor de Python escucha en el puerto `8000`, debes especificarlo en el comando:
+
+**Ejemplo de `wget` contra un servidor web en el puerto 8000**
+
+```bash
+tryhackme@mymachine:~# wget http://MACHINE_IP:8000/myfile
+```
+
+> **Nota:** necesitarás abrir una **nueva terminal** para ejecutar `wget` y dejar abierta la terminal donde iniciaste el servidor. Esto se debe a que el servidor de Python se mantiene en ejecución en esa terminal hasta que lo canceles.
+
+Veamos un ejemplo de la descarga de un archivo desde nuestro servidor con `wget`:
+
+**Descargar un archivo desde nuestro servidor con `wget`**
+
+```bash
+tryhackme@linux3:/tmp# wget http://MACHINE_IP:8000/file
+
+2021-05-04 14:26:16  http://127.0.0.1:8000/file
+Connecting to http://127.0.0.1:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 51095 (50K) [text]
+Saving to: ‘file’
+
+file                    100%[=================================================>]  49.90K  --.-KB/s    in 0.04s
+
+2021-05-04 14:26:16 (1.31 MB/s) - ‘file’ saved [51095/51095]
+```
+
+Recuerda que debes ejecutar `wget` en otra terminal, manteniendo activa la que ejecuta el servidor de Python.
+
+### Limitación del módulo
+
+Este módulo tiene un inconveniente: no ofrece ningún tipo de índice o listado, por lo que debes conocer el nombre y la ubicación exactos del archivo que quieres descargar. Por eso personalmente prefiero usar **Updog**. Es un servidor web más avanzado, pero igualmente ligero. 
 
 
+## Visualizar procesos
+
+Podemos usar el comando `ps` para obtener una lista de los procesos que se ejecutan en la sesión de nuestro usuario, junto con información adicional como su código de estado, la sesión que lo ejecuta, cuánto tiempo de CPU consume y el nombre del programa o comando que se está ejecutando.
+
+> Fíjate en que, en la captura anterior, el segundo proceso (`ps`) tiene el PID `204` y, en el comando siguiente, este se incrementa a `205`.
+
+Para ver los procesos de otros usuarios y los que no se ejecutan desde una sesión (es decir, los procesos del sistema), debemos añadir `aux` al comando `ps`:
+
+```bash
+ps aux
+```
+
+> Observa que ahora vemos un total de 5 procesos, y que aparecen tanto el usuario `root` como `cmnatic`.
+
+Otro comando muy útil es `top`, que muestra estadísticas en tiempo real de los procesos que se ejecutan en tu sistema, en lugar de una vista puntual. Estas estadísticas se actualizan cada 10 segundos, y también cuando usas las flechas del teclado para desplazarte por las filas. Es una excelente forma de conocer el estado de tu sistema.
+
+```bash
+top
+```
+
+---
+
+## Gestionar procesos
+
+Podemos enviar señales para terminar procesos. Existen distintos tipos de señales, que determinan con qué "limpieza" trata el kernel al proceso. Para terminar un proceso usamos el comando `kill` junto con el PID correspondiente. Por ejemplo, para terminar el proceso con PID 1337, ejecutaríamos:
+
+```bash
+kill 1337
+```
+
+Estas son algunas de las señales que podemos enviar a un proceso:
+
+| Señal     | Descripción                                                                  |
+| --------- | ---------------------------------------------------------------------------- |
+| `SIGTERM` | Termina el proceso, permitiéndole realizar tareas de limpieza antes de cerrar. |
+| `SIGKILL` | Termina el proceso de inmediato, sin realizar ninguna limpieza posterior.    |
+| `SIGSTOP` | Detiene o suspende el proceso.                                               |
+
+---
+
+## ¿Cómo se inician los procesos?
+
+Empecemos hablando de los **namespaces** (espacios de nombres). El sistema operativo (SO) los utiliza para dividir los recursos disponibles del equipo (como CPU, RAM y prioridad) entre los procesos. Piensa en ello como cortar tu equipo en porciones, igual que un pastel: los procesos dentro de una porción tienen acceso a una cantidad determinada de potencia de cómputo, que es solo una pequeña parte de lo que realmente está disponible para el conjunto de procesos.
+
+Los namespaces son excelentes para la seguridad, ya que aíslan los procesos entre sí: solo los que están en el mismo namespace pueden verse unos a otros.
+
+Antes vimos cómo funciona el PID, y aquí es donde entra en juego. El proceso con ID 0 es el que se inicia cuando arranca el sistema. En Ubuntu, este proceso es el `init` del sistema, como **systemd**, que ofrece una forma de gestionar los procesos de un usuario y se sitúa entre el sistema operativo y el usuario.
+
+Por ejemplo, una vez que el sistema arranca y se inicializa, `systemd` es uno de los primeros procesos en iniciarse. Cualquier programa o software que queramos ejecutar se iniciará como un **proceso hijo** de `systemd`. Esto significa que está controlado por `systemd`, pero se ejecuta como un proceso independiente (aunque comparte recursos con `systemd`), lo que facilita su identificación y gestión.
+
+---
+
+## Iniciar procesos y servicios durante el arranque
+
+Algunas aplicaciones pueden iniciarse automáticamente al arrancar el sistema. Por ejemplo, servidores web, servidores de bases de datos o servidores de transferencia de archivos. Este software suele ser crítico, y los administradores suelen configurarlo para que se inicie durante el arranque.
+
+En este ejemplo, vamos a iniciar manualmente el servidor web Apache y luego indicar al sistema que lance `apache2` en el arranque.
+
+Para ello usamos `systemctl`, un comando que nos permite interactuar con el proceso (demonio) `systemd`. Es fácil de usar y tiene el siguiente formato:
+
+```bash
+systemctl [opción] [servicio]
+```
+
+Por ejemplo, para iniciar Apache usamos:
+
+```bash
+systemctl start apache2
+```
+
+Parece sencillo, ¿verdad? Si quisiéramos detenerlo, bastaría con reemplazar `[opción]` por `stop` en lugar de `start`.
+
+Con `systemctl` podemos usar cinco opciones:
+
+- `start`
+- `stop`
+- `enable`
+- `disable`
+- `status`
+
+---
+
+## Introducción a procesos en segundo plano y en primer plano
+
+Los procesos pueden ejecutarse en dos estados: **en segundo plano** (*background*) y **en primer plano** (*foreground*). Por ejemplo, los comandos que ejecutas en tu terminal, como `echo`, se ejecutan en primer plano, ya que es el único comando que no se ha indicado que corra en segundo plano. `echo` es un buen ejemplo porque su salida se te devuelve en primer plano, pero no ocurriría lo mismo en segundo plano; observa la captura siguiente.
+
+Aquí ejecutamos `echo "Hi THM"`, y esperamos que la salida se nos devuelva, como ocurre al principio. Pero al añadir el operador `&` al comando, lo único que recibimos es el ID del proceso de `echo` en lugar de la salida real, porque se está ejecutando en segundo plano.
+
+```bash
+echo "Hi THM" &
+```
+
+Esto es muy útil para comandos como la copia de archivos, ya que podemos ejecutarlos en segundo plano y seguir con otros comandos sin tener que esperar a que termine la copia.
+
+Podemos hacer lo mismo al ejecutar scripts. En lugar de usar el operador `&`, podemos pulsar `Ctrl + Z` en el teclado para enviar un proceso a segundo plano. También es una forma eficaz de "pausar" la ejecución de un script o comando, como en el siguiente ejemplo.
+
+Este script repetirá "This will keep on looping until I stop!" hasta que detengamos o suspendamos el proceso. Al pulsar `Ctrl + Z` (se muestra como `^Z`), nuestra terminal deja de llenarse de mensajes, hasta que lo traigamos de vuelta a primer plano, como veremos a continuación.
+
+---
+
+## Traer un proceso a primer plano
+
+Ahora que tenemos un proceso en segundo plano, por ejemplo nuestro script `background.sh` (lo cual podemos confirmar con `ps aux`), podemos traerlo de vuelta al primer plano para interactuar con él.
+
+Con el proceso en segundo plano, ya sea mediante `Ctrl + Z` o el operador `&`, usamos `fg` para devolverlo al foco, como se ve a continuación: el comando `fg` trae el proceso de vuelta a la terminal y la salida del script vuelve a mostrarse.
+
+```bash
+fg
+```
 
