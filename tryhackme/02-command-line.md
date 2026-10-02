@@ -543,3 +543,212 @@ En esta sala usamos el comando `more` de dos maneras:
 
 Con estos conocimientos, ya sabemos cómo mostrar la página de ayuda de un comando nuevo y cómo visualizar una salida larga una página cada vez.
 
+# Windows PowerShell
+
+PowerShell se puede iniciar de varias maneras, según tus necesidades y tu entorno. Si trabajas en un sistema Windows desde la interfaz gráfica (GUI), estas son algunas de las formas posibles:
+
+| Método | Descripción |
+| ------ | ----------- |
+| **Menú Inicio** | Escribe `powershell` en la barra de búsqueda del menú Inicio y haz clic en *Windows PowerShell* o *PowerShell* en los resultados. |
+| **Ejecutar** | Pulsa `Win + R` para abrir el cuadro de diálogo Ejecutar, escribe `powershell` y pulsa Enter. |
+| **Explorador de archivos** | Navega a cualquier carpeta, escribe `powershell` en la barra de direcciones y pulsa Enter. Así se abre PowerShell en ese directorio concreto. |
+| **Administrador de tareas** | Abre el Administrador de tareas, ve a *Archivo > Ejecutar nueva tarea*, escribe `powershell` y pulsa Enter. |
+
+Alternativamente, PowerShell se puede iniciar desde el Símbolo del sistema (`cmd.exe`) escribiendo `powershell` y pulsando Enter.
+
+En nuestro caso, como solo tenemos acceso al Símbolo del sistema de la máquina virtual objetivo, este es el método que usaremos.
+
+**Terminal**
+
+```
+captain@THEBLACKPEARL C:\Users\captain>powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\captain> 
+```
+
+Una vez iniciado PowerShell, se nos presenta un prompt `PS` (de *PowerShell*) en el directorio de trabajo actual.
+
+## Sintaxis básica: Verbo-Sustantivo
+
+Como ya se mencionó, los comandos de PowerShell se conocen como **cmdlets** (se pronuncia *command-lets*). Son mucho más potentes que los comandos tradicionales de Windows y permiten una manipulación de datos más avanzada.
+
+Los cmdlets siguen una convención de nombres coherente: **Verbo-Sustantivo** (*Verb-Noun*). Esta estructura facilita entender qué hace cada cmdlet. El verbo describe la acción y el sustantivo especifica el objeto sobre el que se realiza. Por ejemplo:
+
+| Cmdlet | Descripción |
+| ------ | ----------- |
+| `Get-Content` | Obtiene el contenido de un archivo y lo muestra en la consola. |
+| `Set-Location` | Cambia el directorio de trabajo actual. |
+
+## `Get-Command`
+
+Para listar todos los cmdlets, funciones, alias y scripts que se pueden ejecutar en la sesión actual de PowerShell, podemos usar `Get-Command`. Es una herramienta esencial para descubrir qué comandos podemos utilizar.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Command
+
+CommandType     Name                                               Version    Source 
+-----------     ----                                               -------    ------ 
+
+Alias           Add-AppPackage                                     2.0.1.0    Appx                                                                                                                                       
+Alias           Add-AppPackageVolume                               2.0.1.0    Appx                                                                                                                                       
+Alias           Add-AppProvisionedPackage                          3.0        Dism                                                                                                                                       
+[...]
+Function        A:
+Function        Add-BCDataCacheExtension                           1.0.0.0    BranchCache                                                                                                                                
+Function        Add-DnsClientDohServerAddress                      1.0.0.0    DnsClient
+[...]
+Cmdlet          Add-AppxPackage                                    2.0.1.0    Appx
+Cmdlet          Add-AppxProvisionedPackage                         3.0        Dism                                                                                                                                       
+Cmdlet          Add-AppxVolume                                     2.0.1.0    Appx
+[...]
+```
+
+Por cada objeto `CommandInfo` que recupera el cmdlet, se muestra en la consola cierta información esencial (propiedades). Es posible filtrar la lista de comandos según los valores de las propiedades mostradas. Por ejemplo, si queremos mostrar solo los comandos de tipo función, podemos usar `-CommandType "Function"`, como se muestra a continuación:
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Command -CommandType "Function"
+
+CommandType     Name                                               Version    Source                                                                                                                                     
+-----------     ----                                               -------    ------
+Function        A:
+Function        Add-BCDataCacheExtension                           1.0.0.0    BranchCache
+Function        Add-DnsClientDohServerAddress                      1.0.0.0    DnsClient
+Function        Add-DnsClientNrptRule                              1.0.0.0    DnsClient
+[...]
+```
+
+**Ejemplo:** Para obtener una lista de los comandos que empiezan por el verbo Remove: Get-Command -Name Remove
+
+## `Get-Help`
+
+Otro cmdlet esencial para tener a mano es `Get-Help`: proporciona información detallada sobre los cmdlets, incluyendo su uso, parámetros y ejemplos. Es el recurso de referencia para aprender a usar los comandos de PowerShell.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Help Get-Date
+
+NAME
+    Get-Date
+
+SYNOPSIS
+    Gets the current date and time.
+
+SYNTAX
+    Get-Date [[-Date] <System.DateTime>] [-Day <System.Int32>] [-DisplayHint {Date | Time | DateTime}] [-Format <System.String>] [-Hour <System.Int32>] [-Millisecond <System.Int32>] [-Minute <System.Int32>] [-Month <System.Int32>] [-Second <System.Int32>] [-Year <System.Int32>] [<CommonParameters>]
+
+    Get-Date [[-Date] <System.DateTime>] [-Day <System.Int32>] [-DisplayHint {Date | Time | DateTime}] [-Hour <System.Int32>] [-Millisecond <System.Int32>] [-Minute <System.Int32>] [-Month <System.Int32>] [-Second <System.Int32>] [-UFormat <System.String>] [-Year <System.Int32>] [<CommonParameters>]
+
+DESCRIPTION
+        The `Get-Date` cmdlet gets a DateTime object that represents the current date or a date that you specify. `Get-Date` can format the date and time in several .NET and UNIX formats. You can use `Get-Date` to generate a date or time character string, and then send the string to other cmdlets or programs.
+        
+        `Get-Date` uses the current culture settings of the operating system to determine how the output is formatted. To view your computer's settings, use `(Get-Culture).DateTimeFormat`.
+
+RELATED LINKS
+    Online Version: https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-date?view=powershell-5.1&WT.mc_id=ps-gethelp
+    ForEach-Object
+    Get-Culture
+    Get-Member
+    New-Item
+    New-TimeSpan
+    Set-Date
+    Set-Culture xref:International.Set-Culture
+
+REMARKS
+    To see the examples, type: "get-help Get-Date -examples".
+    For more information, type: "get-help Get-Date -detailed".
+    For technical information, type: "get-help Get-Date -full".
+    For online help, type: "get-help Get-Date -online".
+```
+
+Como muestran los resultados anteriores, `Get-Help` nos indica que podemos obtener otra información útil sobre un cmdlet añadiendo algunas opciones a la sintaxis básica. Por ejemplo, si añadimos `-examples` al comando mostrado arriba, se nos mostrará una lista de las formas más comunes de usar ese cmdlet:
+
+```
+PS C:\Users\captain> Get-Help Get-Date -examples
+```
+
+## `Get-Alias`
+
+Para facilitar la transición de los profesionales de TI, PowerShell incluye **alias** (atajos o nombres alternativos de los cmdlets) para muchos comandos tradicionales de Windows. Son indispensables para quienes ya conocen otras herramientas de línea de comandos, y `Get-Alias` lista todos los alias disponibles. Por ejemplo, `dir` es un alias de `Get-ChildItem` y `cd` es un alias de `Set-Location`.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Alias
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           % -> ForEach-Object
+Alias           ? -> Where-Object
+Alias           ac -> Add-Content
+Alias           asnp -> Add-PSSnapin
+Alias           cat -> Get-Content
+Alias           cd -> Set-Location
+Alias           CFS -> ConvertFrom-String                          3.1.0.0    Microsoft.PowerShell.Utility
+Alias           chdir -> Set-Location 
+Alias           clc -> Clear-Content
+Alias           clear -> Clear-Host
+[...]
+```
+
+## Dónde encontrar y descargar cmdlets
+
+Otra característica potente de PowerShell es la posibilidad de ampliar su funcionalidad descargando cmdlets adicionales desde repositorios en línea.
+
+> **Nota:** los cmdlets de esta sección requieren una conexión a internet activa para consultar los repositorios en línea. La máquina adjunta no tiene acceso a internet, por lo que estos comandos no funcionarán en este entorno.
+
+## `Find-Module`
+
+Para buscar **módulos** (colecciones de cmdlets) en repositorios en línea como la *PowerShell Gallery*, podemos usar `Find-Module`. A veces, si no conocemos el nombre exacto del módulo, resulta útil buscar módulos con un nombre parecido. Lo logramos filtrando la propiedad `Name` y añadiendo un comodín (`*`) al nombre parcial del módulo, con la siguiente sintaxis estándar de PowerShell:
+
+```
+Cmdlet -Propiedad "patrón*"
+```
+
+**Terminal**
+
+```
+PS C:\Users\captain> Find-Module -Name "PowerShell*"   
+
+Version    Name                                Repository           Description 
+-------    ----                                ----------           ----------- 
+0.4.7      powershell-yaml                     PSGallery            Powershell module for serializing and deserializing YAML
+
+2.2.5      PowerShellGet                       PSGallery            PowerShell module with commands for discovering, installing, updating and publishing the PowerShell artifacts like Modules, DSC Resources, Role Capabilities and Scripts.                                                   
+1.0.80.0   PowerShell.Module.InvokeWinGet      PSGallery            Module to Invoke WinGet and parse the output in PSOjects
+
+0.17.0     PowerShellForGitHub                 PSGallery            PowerShell wrapper for GitHub API  
+```
+
+## `Install-Module`
+
+Una vez identificados, los módulos se pueden descargar e instalar desde el repositorio con `Install-Module`, lo que hace disponibles los nuevos cmdlets que contiene el módulo.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Install-Module -Name "PowerShellGet"
+
+Untrusted repository
+You are installing the modules from an untrusted repository. If you trust this repository, change its InstallationPolicy value by running the Set-PSRepository cmdlet. Are you sure you want to install the modules from 'PSGallery'?
+[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "N"):
+```
+El cmdlet tiene como alias a su equivalente tradicional `echo` es Write-Output. Puedes comprobarlo con:
+
+```
+Get-Alias -Name echo
+```
+Debería mostrar echo -> Write-Output.
+
+El comando para obtener ejemplos de uso del cmdlet `New-LocalUser`: 
+```
+Get-Help New-LocalUser -Examples
+```
