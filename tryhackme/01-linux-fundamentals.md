@@ -920,3 +920,36 @@ sudo add-apt-repository --remove ppa:PPA_Name/ppa
 ```
 
 > **Consejo:** `apt remove` conserva los archivos de configuración. Si quieres eliminarlos también, usa `sudo apt purge sublime-text`, y después `sudo apt autoremove` para quitar dependencias que ya no se necesitan.
+
+## Mantenimiento del sistema: registros (logs)
+
+Ya vimos brevemente los archivos de registro y dónde encontrarlos en Linux Fundamentals Parte 1, pero hagamos un repaso rápido. Los archivos y carpetas ubicados en el directorio `/var/log` contienen la información de registro de las aplicaciones y los servicios que se ejecutan en tu sistema. El sistema operativo (SO) se ha vuelto bastante bueno gestionando estos registros de forma automática mediante un proceso conocido como **rotación** (*log rotation*).
+
+```bash
+ls /var/log
+```
+
+---
+
+## Ejemplos de servicios y sus registros
+
+He destacado algunos registros de tres servicios que se ejecutan en una máquina Ubuntu:
+
+- Un servidor web **Apache2**.
+- El servicio **fail2ban**, que se utiliza, por ejemplo, para monitorizar intentos de fuerza bruta.
+- El servicio **UFW**, que se utiliza como cortafuegos (*firewall*).
+
+Estos servicios y sus registros son una excelente forma de supervisar la salud de tu sistema y de protegerlo. Además, los registros de servicios como un servidor web contienen información sobre cada una de las peticiones recibidas, lo que permite a desarrolladores o administradores diagnosticar problemas de rendimiento o investigar la actividad de un intruso.
+
+Por ejemplo, estos son los dos tipos de archivos de registro más interesantes:
+
+| Tipo de registro | Descripción |
+| ---------------- | ----------- |
+| **Access log** (registro de acceso) | Guarda las peticiones que recibe el servidor. |
+| **Error log** (registro de errores) | Guarda los errores que se producen en el servicio. |
+
+---
+
+## Registros del sistema operativo
+
+Por supuesto, también existen registros que almacenan información sobre cómo funciona el propio SO y sobre las acciones que realizan los usuarios, como los **intentos de autenticación**.
