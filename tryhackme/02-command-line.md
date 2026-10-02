@@ -752,3 +752,129 @@ El comando para obtener ejemplos de uso del cmdlet `New-LocalUser`:
 ```
 Get-Help New-LocalUser -Examples
 ```
+
+## Listar contenido: `Get-ChildItem`
+
+De forma similar al comando `dir` del Símbolo del sistema (o a `ls` en sistemas tipo Unix), `Get-ChildItem` lista los archivos y directorios de una ubicación especificada con el parámetro `-Path`. Se puede usar para explorar directorios y ver su contenido. Si no se especifica ninguna ruta, el cmdlet mostrará el contenido del directorio de trabajo actual.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-ChildItem 
+
+    Directory: C:\Users\captain
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-r---          5/8/2021   9:15 AM                Desktop
+d-r---          9/4/2024  10:58 AM                Documents
+d-r---          5/8/2021   9:15 AM                Downloads
+d-r---          5/8/2021   9:15 AM                Favorites
+d-r---          5/8/2021   9:15 AM                Links
+d-r---          5/8/2021   9:15 AM                Music
+d-r---          5/8/2021   9:15 AM                Pictures
+d-----          5/8/2021   9:15 AM                Saved Games
+d-r---          5/8/2021   9:15 AM                Videos
+```
+
+**Ejemplo:** El comando para mostrar el contenido del directorio C:\Users?:
+```
+Get-ChildItem -Path C:\Users
+```
+
+## Contar elementos con `Measure-Object`
+El comando `Get-Command -Name Remove*` mostrará varios elementos, pero para saber el número exacto puedes canalizarlo (*pipe*) a `Measure-Object`, así:
+```
+Get-Command -Name Remove* | Measure-Object
+```
+
+Esto te dará el recuento de cuántos elementos coinciden con ese patrón. La cifra aparece en la propiedad `Count` de la salida.
+
+> **Nota:** el resultado depende de los módulos cargados en la máquina, por lo que conviene ejecutarlo en la VM de la sala.
+
+## Cambiar de directorio: `Set-Location`
+
+Para navegar a un directorio diferente, podemos usar el cmdlet `Set-Location`. Cambia el directorio actual y nos lleva a la ruta especificada, igual que el comando `cd` del Símbolo del sistema.
+
+**Terminal**
+
+```bash
+PS C:\Users\captain> Set-Location -Path ".\Documents"
+PS C:\Users\captain\Documents> 
+```
+
+## Crear elementos: `New-Item`
+
+Mientras que la CLI tradicional de Windows usa comandos distintos para crear y gestionar diferentes elementos, como directorios y archivos, PowerShell simplifica este proceso con un único conjunto de cmdlets para crear y gestionar tanto archivos como directorios.
+
+Para crear un elemento en PowerShell podemos usar `New-Item`. Necesitaremos especificar la ruta del elemento y su tipo (si es un archivo o un directorio).
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents> New-Item -Path ".\captain-cabin\captain-wardrobe" -ItemType "Directory"
+
+    Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----          9/4/2024  12:20 PM                captain-wardrobe
+
+PS C:\Users\captain\Documents> New-Item -Path ".\captain-cabin\captain-wardrobe\captain-boots.txt" -ItemType "File"     
+
+    Directory: C:\Users\captain\Documents\captain-cabin\captain-wardrobe
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/4/2024  11:46 AM              0 captain-boots.txt  
+```
+
+## Eliminar elementos: `Remove-Item`
+
+De forma similar, el cmdlet `Remove-Item` elimina tanto directorios como archivos, mientras que en la CLI de Windows tenemos comandos separados: `rmdir` y `del`.
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents> Remove-Item -Path ".\captain-cabin\captain-wardrobe\captain-boots.txt"
+PS C:\Users\captain\Documents> Remove-Item -Path ".\captain-cabin\captain-wardrobe" 
+```
+
+## Copiar y mover elementos: `Copy-Item` y `Move-Item`
+
+Podemos copiar o mover tanto archivos como directorios usando, respectivamente, `Copy-Item` (equivalente a `copy`) y `Move-Item` (equivalente a `move`).
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents> Copy-Item -Path .\captain-cabin\captain-hat.txt -Destination .\captain-cabin\captain-hat2.txt
+PS C:\Users\captain\Documents> Get-ChildItem -Path ".\captain-cabin\" 
+
+    Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name 
+----                 -------------         ------ ----
+d-----          9/4/2024  12:50 PM                captain-wardrobe
+-a----          9/4/2024  12:50 PM              0 captain-boots.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat2.txt
+-a----          9/4/2024  12:37 PM           2116 ship-flag.txt 
+```
+
+## Leer el contenido de un archivo: `Get-Content`
+
+Por último, para leer y mostrar el contenido de un archivo podemos usar el cmdlet `Get-Content`, que funciona de forma similar al comando `type` del Símbolo del sistema (o a `cat` en sistemas tipo Unix).
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-Content -Path ".\captain-hat.txt"
+ _           _   
+| |         | |
+| |__   __ _| |_
+| '_ \ / _ | __|
+| | | | (_| | |_
+|_| |_|\__,_|\__|
+
+Don't touch my hat!
+```
