@@ -763,3 +763,160 @@ Con el proceso en segundo plano, ya sea mediante `Ctrl + Z` o el operador `&`, u
 fg
 ```
 
+## Mantenimiento del sistema: automatización
+
+Es posible que los usuarios quieran programar una acción o tarea para que se ejecute automáticamente una vez que el sistema ha arrancado. Por ejemplo, ejecutar comandos, hacer copias de seguridad de archivos o abrir tus programas favoritos, como Spotify o Google Chrome.
+
+Vamos a hablar del proceso **cron** y, más concretamente, de cómo interactuar con él mediante los **crontabs**. Cron es uno de los procesos que se inician durante el arranque y se encarga de facilitar y gestionar las tareas programadas (*cron jobs*).
+
+---
+
+## ¿Qué es un crontab?
+
+Un crontab es simplemente un archivo especial, con un formato que el proceso cron reconoce, que se ejecuta línea por línea. Cada línea requiere 6 valores:
+
+| Valor | Descripción                                   |
+| ----- | --------------------------------------------- |
+| `MIN` | En qué minuto se ejecuta                      |
+| `HOUR` | En qué hora se ejecuta                       |
+| `DOM` | En qué día del mes se ejecuta (*Day Of Month*) |
+| `MON` | En qué mes del año se ejecuta                 |
+| `DOW` | En qué día de la semana se ejecuta (*Day Of Week*) |
+| `CMD` | El comando que se ejecutará                   |
+
+---
+
+## Ejemplo: copia de seguridad de archivos
+
+Supongamos que quieres hacer una copia de seguridad de la carpeta `Documents` del usuario `cmnatic` cada 12 horas. Usaríamos el siguiente formato:
+
+```bash
+0 */12 * * * cp -R /home/cmnatic/Documents /var/backups/
+```
+
+Una característica interesante de los crontabs es que admiten el **comodín** o asterisco (`*`). Si no queremos especificar un valor para un campo concreto (por ejemplo, si no nos importa el mes, el día o el día de la semana, y solo queremos que se ejecute cada 12 horas), simplemente colocamos un asterisco.
+
+---
+
+## Herramientas de ayuda
+
+Al principio esto puede resultar confuso, por eso existen recursos muy útiles como el **Crontab Generator**, una aplicación online sencilla que genera el formato por ti, y el sitio **Cron Guru**.
+
+---
+
+## Editar tu crontab
+
+Los crontabs se editan con el siguiente comando, que te permite elegir un editor (como Nano) para modificarlo:
+
+```bash
+crontab -e
+```
+
+## Mantenimiento del sistema: gestión de paquetes
+
+Cuando los desarrolladores quieren ofrecer su software a la comunidad, lo publican en un repositorio de **apt**. Si es aprobado, sus programas y herramientas quedan disponibles para cualquiera. Aquí se ven dos de las mayores virtudes de Linux: la accesibilidad para el usuario y el valor de las herramientas de código abierto.
+
+En Ubuntu, la lista de repositorios configurados se guarda en archivos que sirven como registro del software disponible. Puedes consultarlos con:
+
+```bash
+ls /etc/apt/sources.list.d/
+cat /etc/apt/sources.list
+```
+
+> **Nota:** desde Ubuntu 24.04, los repositorios oficiales se definen en `/etc/apt/sources.list.d/ubuntu.sources` (formato *deb822*), y el archivo clásico `/etc/apt/sources.list` queda prácticamente vacío.
+
+Aunque los fabricantes de sistemas operativos mantienen sus propios repositorios, también puedes añadir repositorios de la comunidad para ampliar las capacidades de tu sistema. Se pueden agregar con el comando `add-apt-repository` o indicando otro proveedor. Por ejemplo, algunos proveedores ofrecen un repositorio más cercano a tu ubicación geográfica (un *mirror*).
+
+---
+
+## Gestionar tus repositorios (añadir y eliminar)
+
+Normalmente usamos el comando `apt` para instalar software en Ubuntu. Este comando forma parte del software de gestión de paquetes que también se llama **apt**, un conjunto de herramientas para administrar paquetes y fuentes de software, e instalar o eliminar programas.
+
+Una forma de añadir repositorios es `add-apt-repository`, pero aquí vamos a hacerlo **manualmente**. Aunque se puede instalar software con instaladores como `dpkg`, la ventaja de `apt` es que, cada vez que actualizamos el sistema, también se comprueban las actualizaciones de los repositorios que hemos añadido.
+
+En este ejemplo añadiremos el editor de texto **Sublime Text** como repositorio, ya que no forma parte de los repositorios predeterminados de Ubuntu.
+
+Al añadir software, la integridad de lo que descargamos se garantiza mediante **claves GPG** (*GNU Privacy Guard*). Son una verificación de seguridad de los desarrolladores: si la clave no coincide con la que tu sistema considera de confianza, el software no se descargará.
+
+> **Nota:** las instancias de TryHackMe no tienen acceso a internet, por lo que no se espera que añadas este repositorio a la máquina desplegada, ya que fallaría.
+
+### Cambio importante: `apt-key` está obsoleto
+
+Antes, la clave GPG se añadía con `apt-key`, que la marcaba como de confianza **para todos** los repositorios del sistema. Ese comando está **obsoleto**. El método actual consiste en guardar la clave en `/etc/apt/keyrings/` y vincularla **solo al repositorio que le corresponde** mediante la opción `Signed-By`.
+
+### Paso 1: descargar y guardar la clave GPG
+
+Creamos el directorio de claves (si no existe) y guardamos la clave de Sublime Text:
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo tee /etc/apt/keyrings/sublimehq-pub.asc > /dev/null
+```
+
+> Si `wget` no está instalado, puedes instalarlo con `sudo apt install wget`.
+
+### Paso 2: añadir el repositorio a las fuentes de apt
+
+Una buena práctica es tener un archivo independiente para cada repositorio de terceros. Crearemos `sublime-text.sources` en `/etc/apt/sources.list.d/`, usando el canal **estable** (*stable*):
+
+```bash
+echo -e 'Types: deb\nURIs: https://download.sublimetext.com/\nSuites: apt/stable/\nSigned-By: /etc/apt/keyrings/sublimehq-pub.asc' | sudo tee /etc/apt/sources.list.d/sublime-text.sources
+```
+
+El archivo resultante tiene este contenido, que también puedes crear a mano con Nano (`sudo nano /etc/apt/sources.list.d/sublime-text.sources`):
+
+```text
+Types: deb
+URIs: https://download.sublimetext.com/
+Suites: apt/stable/
+Signed-By: /etc/apt/keyrings/sublimehq-pub.asc
+```
+
+> **Canales disponibles:** `apt/stable/` ofrece las versiones estables y `apt/dev/` las versiones de desarrollo, que pueden ser menos estables.
+
+### Paso 3: actualizar apt
+
+Tras añadir la entrada, actualizamos el índice de paquetes para que apt reconozca el nuevo repositorio:
+
+```bash
+sudo apt update
+```
+
+### Paso 4: instalar el software
+
+Una vez actualizado correctamente, instalamos el software:
+
+```bash
+sudo apt install sublime-text
+```
+
+> **Nota:** el tutorial original usaba Sublime Text 3. Actualmente el repositorio ofrece Sublime Text 4.
+
+---
+
+## Eliminar paquetes y repositorios
+
+Eliminar es tan fácil como hacer el proceso inverso.
+
+**1. Desinstalar el software:**
+
+```bash
+sudo apt remove sublime-text
+```
+
+**2. Eliminar el repositorio.** Si lo añadiste a mano, borra su archivo y la clave asociada:
+
+```bash
+sudo rm /etc/apt/sources.list.d/sublime-text.sources
+sudo rm /etc/apt/keyrings/sublimehq-pub.asc
+sudo apt update
+```
+
+Si lo añadiste con un PPA, usa:
+
+```bash
+sudo add-apt-repository --remove ppa:PPA_Name/ppa
+```
+
+> **Consejo:** `apt remove` conserva los archivos de configuración. Si quieres eliminarlos también, usa `sudo apt purge sublime-text`, y después `sudo apt autoremove` para quitar dependencias que ya no se necesitan.
