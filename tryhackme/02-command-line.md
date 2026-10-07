@@ -878,3 +878,454 @@ PS C:\Users\captain\Documents\captain-cabin> Get-Content -Path ".\captain-hat.tx
 
 Don't touch my hat!
 ```
+
+## Canalización, filtrado y ordenación de datos
+
+La **canalización** (*piping*) es una técnica usada en los entornos de línea de comandos que permite que la salida de un comando se utilice como entrada de otro. Esto crea una secuencia de operaciones en la que los datos fluyen de un comando al siguiente. Se representa con el símbolo `|` y se usa ampliamente en la CLI de Windows, como vimos antes en este módulo, así como en los shells basados en Unix.
+
+En PowerShell, la canalización es aún más potente porque transmite **objetos** en lugar de simple texto. Estos objetos no solo contienen los datos, sino también las propiedades y métodos que los describen y permiten interactuar con ellos.
+
+## Ordenar objetos: `Sort-Object`
+
+Por ejemplo, si quieres obtener una lista de los archivos de un directorio y ordenarlos por tamaño, puedes usar el siguiente comando en PowerShell:
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-ChildItem | Sort-Object Length
+
+    Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/4/2024  12:50 PM              0 captain-boots.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat2.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat.txt
+-a----          9/4/2024  12:37 PM           2116 ship-flag.txt
+d-----          9/4/2024  12:50 PM                captain-wardrobe
+```
+
+Aquí, `Get-ChildItem` recupera los archivos (como objetos) y la tubería (`|`) envía esos objetos a `Sort-Object`, que los ordena según su propiedad `Length` (tamaño). Este enfoque basado en objetos permite crear secuencias de comandos más detalladas y flexibles.
+
+En el ejemplo anterior hemos usado el cmdlet `Sort-Object` para ordenar objetos según las propiedades indicadas. Además de ordenar, PowerShell ofrece un conjunto de cmdlets que, combinados con la canalización, permiten una manipulación y un análisis de datos avanzados.
+
+## Filtrar objetos: `Where-Object`
+
+Para filtrar objetos según unas condiciones concretas y devolver solo los que cumplan los criterios, podemos usar el cmdlet `Where-Object`. Por ejemplo, para listar solo los archivos `.txt` de un directorio, podemos usar:
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-ChildItem | Where-Object -Property "Extension" -eq ".txt" 
+
+    Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/4/2024  12:50 PM              0 captain-boots.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat.txt
+-a----          9/4/2024  12:14 PM            264 captain-hat2.txt
+-a----          9/4/2024  12:37 PM           2116 ship-flag.txt
+```
+
+Aquí, `Where-Object` filtra los archivos por su propiedad `Extension`, asegurando que solo se listen los archivos cuya extensión sea igual (`-eq`) a `.txt`.
+
+## Operadores de comparación
+
+El operador `-eq` (es decir, «igual a») forma parte de un conjunto de operadores de comparación que comparte con otros lenguajes de scripting (como Bash o Python). Algunos de los operadores más útiles:
+
+| Operador | Significado | Descripción |
+| -------- | ----------- | ----------- |
+| `-ne` | No igual (*not equal*) | Permite excluir objetos de los resultados según los criterios especificados. |
+| `-gt` | Mayor que (*greater than*) | Filtra solo los objetos que superan un valor determinado. Es una comparación **estricta**: los objetos iguales al valor especificado quedan excluidos. |
+| `-ge` | Mayor o igual que (*greater than or equal to*) | Versión no estricta del anterior. Es una combinación de `-gt` y `-eq`. |
+| `-lt` | Menor que (*less than*) | Al igual que su opuesto, es un operador **estricto**: incluye solo los objetos estrictamente por debajo de un valor. |
+| `-le` | Menor o igual que (*less than or equal to*) | Al igual que `-ge`, es la versión no estricta del anterior. Es una combinación de `-lt` y `-eq`. |
+
+## Filtrar por patrón con `-like`
+
+A continuación, otro ejemplo muestra que los objetos también se pueden filtrar seleccionando las propiedades que coinciden (`-like`) con un patrón especificado:
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-ChildItem | Where-Object -Property "Name" -like "ship*"  
+
+    Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/4/2024  12:37 PM           2116 ship-flag.txt
+```
+
+## Seleccionar propiedades: `Select-Object`
+
+El siguiente cmdlet de filtrado, `Select-Object`, se usa para seleccionar propiedades concretas de los objetos o para limitar el número de objetos devueltos. Es útil para refinar la salida y mostrar solo los detalles que necesitas.
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-ChildItem | Select-Object Name,Length 
+
+Name              Length
+----              ------
+captain-wardrobe
+captain-boots.txt 0
+captain-hat.txt   264
+captain-hat2.txt  264
+ship-flag.txt     2116
+```
+
+---
+
+## Ejercicio: combinar cmdlets
+
+Para construir una canalización de cmdlets que ordene y filtre la salida con el objetivo de mostrar **el archivo más grande** del directorio `C:\Users\captain\Documents\captain-cabin`.
+
+```
+Get-ChildItem | Sort-Object Length -Descending | Select-Object -First 1
+
+Directory: C:\Users\captain\Documents\captain-cabin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/4/2024  12:37 PM           2116 ship-flag.txt
+        
+```
+
+## Buscar texto en archivos: `Select-String`
+
+El último cmdlet de este conjunto de filtrado es `Select-String`. Este cmdlet busca patrones de texto dentro de archivos, de forma similar a `grep` en los sistemas basados en Unix o a `findstr` en el Símbolo del sistema de Windows. Se usa habitualmente para encontrar contenido específico en archivos de registro o documentos.
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Select-String -Path ".\captain-hat.txt" -Pattern "hat" 
+
+captain-hat.txt:8:Don't touch my hat!
+```
+
+`Select-String` admite plenamente el uso de **expresiones regulares** (*regex*). Esta función avanzada permite realizar coincidencias de patrones complejas dentro de los archivos, lo que lo convierte en una herramienta potente para buscar y analizar datos de texto.
+
+## Ejercicio: 
+
+¿Cómo recuperarías los elementos del directorio actual con un tamaño mayor que 100? 
+
+```
+Get-ChildItem | Where-Object -Property Length -gt 100
+```
+
+## Información del sistema: `Get-ComputerInfo`
+
+El cmdlet `Get-ComputerInfo` recupera información completa del sistema, incluyendo datos del sistema operativo, especificaciones de hardware, detalles de la BIOS y mucho más. Ofrece una instantánea de toda la configuración del sistema en un solo comando. Su equivalente tradicional, `systeminfo`, solo recupera un pequeño subconjunto de esos mismos detalles.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-ComputerInfo
+
+WindowsBuildLabEx                                       : 20348.859.amd64fre.fe_release_svc_prod2.220707-1832
+WindowsCurrentVersion                                   : 6.3
+WindowsEditionId                                        : ServerDatacenter
+WindowsInstallationType                                 : Server Core
+WindowsInstallDateFromRegistry                          : 4/23/2024 6:36:29 PM
+WindowsProductId                                        : 00454-60000-00001-AA763
+WindowsProductName                                      : Windows Server 2022 Datacenter
+[...]
+```
+
+## Usuarios locales: `Get-LocalUser`
+
+Esencial para gestionar cuentas de usuario y comprender la configuración de seguridad de la máquina, `Get-LocalUser` lista todas las cuentas de usuario locales del sistema. La salida predeterminada muestra, para cada usuario, el nombre de usuario, el estado de la cuenta y la descripción.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-LocalUser
+
+Name               Enabled Description 
+----               ------- -----------
+Administrator      True    Built-in account for administering the computer/domain
+captain            True    The beloved captain of this pirate ship.
+DefaultAccount     False   A user account managed by the system.
+Guest              False   Built-in account for guest access to the computer/domain
+WDAGUtilityAccount False   A user account managed and used by the system for Windows Defender Application Guard scenarios.
+```
+
+## Configuración de red
+
+De forma similar al comando tradicional `ipconfig`, los dos cmdlets siguientes se pueden usar para obtener información detallada sobre la configuración de red del sistema.
+
+### `Get-NetIPConfiguration`
+
+`Get-NetIPConfiguration` proporciona información detallada sobre las interfaces de red del sistema, incluyendo las direcciones IP, los servidores DNS y la configuración de las puertas de enlace.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-NetIPConfiguration
+
+InterfaceAlias       : Ethernet
+InterfaceIndex       : 5
+InterfaceDescription : Amazon Elastic Network Adapter
+NetProfile.Name      : Network 3
+IPv4Address          : 10.10.178.209
+IPv6DefaultGateway   :
+IPv4DefaultGateway   : 10.10.0.1
+DNSServer            : 10.0.0.2
+```
+
+### `Get-NetIPAddress`
+
+Si necesitamos detalles específicos sobre las direcciones IP asignadas a las interfaces de red, el cmdlet `Get-NetIPAddress` muestra los detalles de todas las direcciones IP configuradas en el sistema, incluidas las que no están activas actualmente.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-NetIPAddress
+
+IPAddress         : fe80::3fef:360c:304:64e%5
+InterfaceIndex    : 5
+InterfaceAlias    : Ethernet
+AddressFamily     : IPv6
+Type              : Unicast
+PrefixLength      : 64
+PrefixOrigin      : WellKnown
+SuffixOrigin      : Link
+AddressState      : Preferred
+ValidLifetime     : Infinite ([TimeSpan]::MaxValue)
+PreferredLifetime : Infinite ([TimeSpan]::MaxValue)
+SkipAsSource      : False
+PolicyStore       : ActiveStore
+
+IPAddress         : ::1
+InterfaceIndex    : 1
+InterfaceAlias    : Loopback Pseudo-Interface 1
+AddressFamily     : IPv6
+[...]
+
+IPAddress         : 10.10.178.209
+InterfaceIndex    : 5
+InterfaceAlias    : Ethernet
+AddressFamily     : IPv4
+[...]
+
+IPAddress         : 127.0.0.1
+InterfaceIndex    : 1
+InterfaceAlias    : Loopback Pseudo-Interface 1
+AddressFamily     : IPv4
+[...]
+```
+
+Estos cmdlets permiten a los profesionales de TI acceder rápidamente a información crucial del sistema y de la red directamente desde la línea de comandos, lo que facilita la supervisión y la administración de máquinas locales y remotas.
+
+## Procesos: `Get-Process`
+
+`Get-Process` ofrece una vista detallada de todos los procesos que se están ejecutando actualmente, incluyendo el uso de CPU y de memoria, lo que lo convierte en una herramienta potente para la supervisión y la resolución de problemas.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Process
+
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName 
+-------  ------    -----      -----     ------     --  -- -----------
+     67       5      872        500       0.06   2340   0 AggregatorHost
+     55       5      712       2672       0.02   3024   0 AM_Delta_Patch_1.417.483.0
+    309      13    18312       1256       0.52   1524   0 amazon-ssm-agent
+     78       6     4440        944       0.02    516   0 cmd
+     94       7     1224       1744       0.31    568   0 conhost
+[...]
+```
+
+## Servicios: `Get-Service`
+
+De forma similar, `Get-Service` permite obtener información sobre el estado de los servicios de la máquina, como cuáles están en ejecución, detenidos o en pausa. Los administradores de sistemas lo usan ampliamente para resolver problemas, pero también los analistas forenses que buscan servicios anómalos instalados en el sistema.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-Service
+
+Status   Name               DisplayName                           
+------   ----               -----------
+Stopped  Amazon EC2Launch   Amazon EC2Launch
+Running  AmazonSSMAgent     Amazon SSM Agent
+Stopped  AppIDSvc           Application Identity
+Running  BFE                Base Filtering Engine
+Running  CertPropSvc        Certificate Propagation
+Stopped  ClipSVC            Client License Service (ClipSVC)
+[...]
+```
+
+---
+
+## Conexiones de red: `Get-NetTCPConnection`
+
+Para supervisar las conexiones de red activas, `Get-NetTCPConnection` muestra las conexiones TCP actuales y ofrece información tanto de los extremos locales como de los remotos. Este cmdlet resulta especialmente útil en tareas de respuesta a incidentes o de análisis de malware, ya que puede descubrir puertas traseras ocultas o conexiones establecidas hacia un servidor controlado por un atacante.
+
+**Terminal**
+
+```
+PS C:\Users\captain> Get-NetTCPConnection
+
+LocalAddress        LocalPort RemoteAddress       RemotePort State       AppliedSetting OwningProcess 
+------------        --------- -------------       ---------- -----       -------------- -------------
+[...]
+::                  22        ::                  0          Listen                     1444          
+10.10.178.209       49695     199.232.26.172      80         TimeWait                   0
+0.0.0.0             49668     0.0.0.0             0          Listen                     424
+0.0.0.0             49667     0.0.0.0             0          Listen                     652
+0.0.0.0             49666     0.0.0.0             0          Listen                     388
+0.0.0.0             49665     0.0.0.0             0          Listen                     560
+0.0.0.0             49664     0.0.0.0             0          Listen                     672           
+0.0.0.0             3389      0.0.0.0             0          Listen                     980
+10.10.178.209       139       0.0.0.0             0          Listen                     4
+0.0.0.0             135       0.0.0.0             0          Listen                     908
+10.10.178.209       22        10.14.87.60         53523      Established Internet       1444
+0.0.0.0             22        0.0.0.0             0          Listen                     1444
+```
+
+## Hashes de archivos: `Get-FileHash`
+
+Además, mencionaremos `Get-FileHash`, un cmdlet útil para generar *hashes* de archivos, especialmente valioso en la respuesta a incidentes, la búsqueda de amenazas (*threat hunting*) y el análisis de malware, ya que ayuda a verificar la integridad de los archivos y a detectar posibles manipulaciones.
+
+**Terminal**
+
+```
+PS C:\Users\captain\Documents\captain-cabin> Get-FileHash -Path .\ship-flag.txt    
+
+Algorithm       Hash                      Path 
+---------       ----                      ----
+SHA256          54D2EC3C12BF3D[...]       C:\Users\captain\Documents\captain-cabin\ship-flag.txt
+```
+
+## Flujos de datos alternativos (ADS)
+
+También puedes ver los **flujos de datos alternativos** (*Alternate Data Streams*, ADS) asociados a un archivo mediante PowerShell, como se muestra a continuación. (Si no estás seguro de qué es un ADS, lo explicamos en detalle en la sala *Windows Fundamentals 1*).
+
+**Terminal**
+
+```
+PS C:\Users\Alex\Documents> Get-Item -Path "C:\House\house_log.txt" -Stream *
+
+PSPath        : Microsoft.PowerShell.Core\FileSystem::C:\House\house_log.txt::$DATA
+PSParentPath  : Microsoft.PowerShell.Core\FileSystem::C:\House
+PSChildName   : house_log.txt::$DATA
+PSDrive       : C
+PSProvider    : Microsoft.PowerShell.Core\FileSystem
+PSIsContainer : False
+FileName      : C:\House\house_log.txt
+Stream        : :$DATA
+Length        : 13
+
+PSPath        : Microsoft.PowerShell.Core\FileSystem::C:\House\house_log.txt:housinginfo
+PSParentPath  : Microsoft.PowerShell.Core\FileSystem::C:\House
+PSChildName   : house_log.txt:housinginfo
+PSDrive       : C
+PSProvider    : Microsoft.PowerShell.Core\FileSystem
+PSIsContainer : False
+FileName      : C:\House\house_log.txt
+Stream        : housinginfo
+Length        : 21
+```
+
+En la salida anterior se ven dos flujos asociados al archivo `C:\House\house_log.txt`:
+
+| Flujo | Descripción |
+| ----- | ----------- |
+| `:$DATA` | Es el flujo de datos predeterminado de todo archivo NTFS. Contiene el contenido normal del archivo y **no** es un ADS. |
+| `housinginfo` | Es el flujo de datos alternativo (ADS) añadido a este archivo. Aparece como `house_log.txt:housinginfo`, lo que significa que hay un flujo oculto adicional llamado `housinginfo` asociado al archivo. |
+
+> **Nota:** el ejemplo de ADS mostrado arriba pertenece a un archivo de otra máquina y no estará disponible en la VM adjunta.
+
+Estos cmdlets proporcionan, en conjunto, un completo conjunto de herramientas para la supervisión y el análisis del sistema en tiempo real, y resultan especialmente útiles para quienes responden a incidentes y buscan amenazas.
+
+## Ejemplos: Navegar por el sistema de archivos
+
+### Pregunta 1
+
+**Aparte de tu usuario actual y de la cuenta predeterminada «Administrator», ¿qué otro usuario está habilitado en la máquina objetivo?**
+
+**Respuesta:** `p1r4t3`
+
+```
+Get-LocalUser
+```
+
+### Pregunta 2
+
+**¿Cuál es el lema que ha puesto tan descaradamente como descripción de su cuenta?**
+
+**Respuesta:** `A merry life and a short one.`
+
+```
+Get-LocalUser
+```
+
+### Pregunta 3
+
+**Ahora, un pequeño reto para ponerlo todo en práctica. El sospechoso que acabamos de encontrar escondido entre los usuarios locales tiene su propia carpeta personal en el directorio `C:\Users`. ¿Puedes navegar por el sistema de archivos y encontrar el tesoro escondido dentro del directorio personal de este pirata?**
+
+**Respuesta:** `THM{p34rlInAsh3ll}`
+
+```
+Set-Location C:\Users\p1r4t3
+Get-ChildItem
+Set-Location hidden-treasure-chest
+Get-Content big-treasure.txt
+```
+
+### Pregunta 4
+
+**En la tarea anterior encontraste un maravilloso tesoro cuidadosamente escondido en la máquina objetivo. ¿Cuál es el hash del archivo que lo contiene?**
+
+**Respuesta:** `71FC5EC11C2497A32F8F08E61399687D90ABE6E204D2964DF589543A613F3E08`
+
+```
+Get-FileHash -Path big-treasure.txt
+```
+
+### Pregunta 5
+
+**¿Qué propiedad que `Get-NetTCPConnection` recupera por defecto contiene información sobre el proceso que ha iniciado la conexión?**
+
+**Respuesta:** `OwningProcess`
+
+### Pregunta 6
+
+**Es hora de otro pequeño reto. Se ha instalado en este barco pirata un servicio vital para garantizar que el capitán pueda navegar siempre con seguridad. Pero algo no funciona como se esperaba y el capitán se pregunta por qué. Al investigar, descubre por fin la verdad: ¡el servicio ha sido manipulado! El sospechoso de antes ha modificado el `DisplayName` del servicio para reflejar su propio lema, el mismo que puso en la descripción de su usuario. Con esta información y los conocimientos de PowerShell que has acumulado hasta ahora, ¿puedes encontrar el nombre del servicio?**
+
+**Respuesta:** `p1r4t3-s-compass`
+
+```powershell
+Get-Service | Where-Object { $_.DisplayName -like "*merry*" } | Select-Object Name, DisplayName
+```
+
+## Scripting
+
+PowerShell es un potente lenguaje de scripting que se usa para automatizar tareas en varios sistemas. Una de sus características clave es la **ejecución remota** mediante el cmdlet `Invoke-Command`.
+
+### Comando clave
+
+```
+Invoke-Command -ComputerName RemotePC -ScriptBlock {Get-Service}
+```
+
+Este comando ejecuta `Get-Service` en un equipo remoto llamado `RemotePC`.
+
+### Comparación
+
+- CMD no tiene un equivalente de scripting integrado tan potente como PowerShell.
+- PowerShell es más comparable al scripting con **Bash** en Linux.
+
+### Pregunta
+
+**¿Cuál es la sintaxis para ejecutar el comando `Get-Service` en un equipo remoto llamado «RoyalFortune»? Supón que no necesitas proporcionar credenciales para establecer la conexión. [para esta pregunta, evita el uso de comillas (" o ') en tu respuesta]**
+
+**Respuesta:**
+
+```
+Invoke-Command -ComputerName RoyalFortune -ScriptBlock {Get-Service}
+```
+
