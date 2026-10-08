@@ -1329,3 +1329,99 @@ Este comando ejecuta `Get-Service` en un equipo remoto llamado `RemotePC`.
 Invoke-Command -ComputerName RoyalFortune -ScriptBlock {Get-Service}
 ```
 
+# Linux Shells
+## Tipos de shells en Linux
+
+Al igual que el Símbolo del sistema y PowerShell en Windows, Linux dispone de distintos tipos de shells, cada uno con sus propias características y funciones.
+
+Las distintas distribuciones de Linux instalan varios shells. Para ver cuál estás usando, escribe el siguiente comando:
+
+**Shell actual**
+
+```
+user@tryhackme:~$ echo $SHELL
+/bin/bash
+```
+
+## Listar los shells disponibles
+
+También puedes listar los shells disponibles en tu sistema Linux. El archivo `/etc/shells` contiene todos los shells instalados en el sistema. Para verlos, escribe `cat /etc/shells` en la terminal:
+
+**Shells disponibles**
+
+```
+user@tryhackme:~$ cat /etc/shells
+# /etc/shells: valid login shells
+/bin/sh
+/bin/bash
+/usr/bin/bash
+/bin/rbash
+/usr/bin/rbash
+/bin/dash
+/usr/bin/dash
+/usr/bin/tmux
+/usr/bin/screen
+/bin/zsh
+/usr/bin/zsh
+```
+
+## Cambiar de shell
+
+Para cambiar entre estos shells, escribe el nombre del shell que esté presente en tu sistema y se abrirá, como se ve a continuación:
+
+**Cambiar de shell**
+
+```
+user@tryhackme:~$ zsh
+tryhackme% 
+```
+
+Si quieres cambiar de forma **permanente** tu shell predeterminado, puedes usar el siguiente comando, que establecerá este shell como el predeterminado de tu terminal:
+
+```
+chsh -s /usr/bin/zsh
+```
+
+Existen muchos tipos de shells en Linux. Veremos algunos de ellos y sus características.
+
+## Bourne Again Shell (Bash)
+
+**Bourne Again Shell (Bash)** es el shell predeterminado en la mayoría de las distribuciones de Linux. Cuando abres la terminal, Bash está listo para que introduzcas comandos. Antes de Bash existían shells como `sh`, `ksh` y `csh`, con distintas capacidades. Bash surgió como un reemplazo mejorado de todos ellos, tomando prestadas capacidades de cada uno. Esto significa que incorpora muchas de las funciones de esos shells antiguos, además de algunas habilidades propias. Estas son algunas de sus características clave:
+
+- Es un shell muy extendido, con capacidades de scripting.
+- Ofrece **autocompletado con tabulador**: si estás a mitad de un comando, puedes pulsar la tecla `Tab` y se completará automáticamente según una posible coincidencia, o te mostrará varias sugerencias para completarlo.
+- Mantiene un **archivo de historial** y registra todos tus comandos. Puedes usar las flechas arriba y abajo para recuperar comandos anteriores sin volver a escribirlos. También puedes escribir `history` para mostrar todos tus comandos anteriores.
+
+## Friendly Interactive Shell (Fish)
+
+**Friendly Interactive Shell (Fish)** tampoco es el shell predeterminado en la mayoría de las distribuciones de Linux. Como su nombre indica, se centra más en la facilidad de uso que otros shells. Estas son algunas de sus características clave:
+
+- Ofrece una sintaxis muy sencilla, adecuada para principiantes.
+- A diferencia de Bash, incluye **corrección ortográfica automática** de los comandos que escribes.
+- Permite personalizar el prompt con temas atractivos.
+- Su **resaltado de sintaxis** colorea las distintas partes de un comando según su función, lo que mejora la legibilidad y ayuda a detectar errores gracias a colores específicos.
+- Fish también ofrece scripting, autocompletado con tabulador e historial de comandos, como los demás shells mencionados en esta tarea.
+
+## Z Shell (Zsh)
+
+**Z Shell (Zsh)** no viene instalado por defecto en la mayoría de las distribuciones de Linux. Se considera un shell moderno que combina las funcionalidades de varios shells anteriores. Estas son algunas de sus características clave:
+
+- Ofrece autocompletado avanzado con tabulador y también permite escribir scripts.
+- Al igual que Fish, incluye corrección ortográfica automática de los comandos.
+- Ofrece una personalización muy amplia, lo que puede hacerlo más lento que otros shells.
+- También proporciona autocompletado, historial de comandos y otras funciones.
+
+## Comparativa: Bash, Fish y Zsh
+
+| Característica | Bash | Fish | Zsh |
+| -------------- | ---- | ---- | --- |
+| **Nombre completo** | *Bourne Again Shell*. | *Friendly Interactive Shell*. | *Z Shell*. |
+| **Scripting** | Scripting ampliamente compatible, con abundante documentación disponible. | Funciones de scripting limitadas en comparación con los otros dos shells. | Excelente nivel de scripting; combina las capacidades tradicionales de Bash con algunas funciones adicionales. |
+| **Autocompletado con tabulador** | Autocompletado básico. | Autocompletado avanzado, con sugerencias basadas en tus comandos anteriores. | Su autocompletado se puede ampliar enormemente mediante plugins. |
+| **Personalización** | Nivel básico de personalización. | Buena personalización mediante herramientas interactivas. | Personalización avanzada mediante el framework **oh-my-zsh**. |
+| **Facilidad de uso** | Es menos amigable, pero al ser un shell tradicional y muy usado, sus usuarios están familiarizados y cómodos con él. | Es el shell más amigable. | Puede ser muy amigable con la personalización adecuada. |
+| **Resaltado de sintaxis** | No está disponible en este shell. | Viene integrado en el shell. | Se puede usar incorporando algunos plugins. |
+
+## ¿Cuál elegir?
+
+Elegir el mejor shell de Linux depende del uso que le des y de sus características. Los shells vistos en esta tarea son solo algunos de los muchos que existen en Linux. Puedes comparar las funciones de los distintos shells y elegir el que mejor se adapte a tus tareas.
