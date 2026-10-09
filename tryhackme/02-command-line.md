@@ -1,3 +1,5 @@
+![Windows command line](img/cmd.png)
+
 # Windows Command Line
 
 Solo podemos ejecutar aquellos que se encuentren dentro de las rutas definidas en el `Path` de Windows. Puedes usar el comando `set` para consultar tu `Path` desde la línea de comandos. La salida de la terminal siguiente muestra las rutas en las que MS Windows buscará y ejecutará los comandos, indicadas en la línea que empieza por `Path=`.
@@ -542,6 +544,8 @@ En esta sala usamos el comando `more` de dos maneras:
 ```
 
 Con estos conocimientos, ya sabemos cómo mostrar la página de ayuda de un comando nuevo y cómo visualizar una salida larga una página cada vez.
+
+![Power Shell](img/powershell.png)
 
 # Windows PowerShell
 
@@ -1329,7 +1333,10 @@ Este comando ejecuta `Get-Service` en un equipo remoto llamado `RemotePC`.
 Invoke-Command -ComputerName RoyalFortune -ScriptBlock {Get-Service}
 ```
 
+![Linux shell](img/shell.png)
+
 # Linux Shells
+
 ## Tipos de shells en Linux
 
 Al igual que el Símbolo del sistema y PowerShell en Windows, Linux dispone de distintos tipos de shells, cada uno con sus propias características y funciones.
