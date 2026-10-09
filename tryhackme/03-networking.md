@@ -213,3 +213,46 @@ Según la RFC 1918, los rangos de direcciones privadas son:
 
 Una dirección IPv4 se compone de cuatro octetos, y cada uno debe estar entre `0` y `255`.
 
+## UDP y TCP
+
+El protocolo IP nos permite llegar a un host de destino en la red, identificado por su dirección IP. Pero necesitamos protocolos que permitan que los **procesos** de los hosts conectados en red se comuniquen entre sí. Existen dos protocolos de transporte para lograrlo: **UDP** y **TCP**.
+
+## UDP
+
+**UDP** (*User Datagram Protocol*, Protocolo de Datagramas de Usuario) nos permite llegar a un proceso concreto del host de destino. UDP es un protocolo sencillo y **sin conexión** que opera en la capa de transporte, es decir, la capa 4. Al no tener conexión, no necesita establecer una. UDP ni siquiera ofrece un mecanismo para saber si el paquete ha sido entregado.
+
+Una dirección IP identifica al host, pero necesitamos un mecanismo para determinar el proceso emisor y el receptor. Esto se consigue con los **números de puerto**. Un número de puerto usa dos octetos; por lo tanto, va de **1 a 65535**, y el puerto 0 está reservado. (El número 65535 se calcula con la expresión 2<sup>16</sup> − 1).
+
+Un ejemplo de la vida real parecido a UDP es el servicio de correo estándar, sin confirmación de entrega. En otras palabras, no hay garantía de que el paquete UDP se haya recibido correctamente, igual que ocurre al enviar un paquete por correo estándar sin confirmación de entrega. En el caso del correo estándar, eso significa un coste menor que las opciones con confirmación. En el caso de UDP, significa **mayor velocidad** que un protocolo de transporte que ofrezca «confirmación».
+
+Pero ¿y si queremos un protocolo de transporte que confirme los paquetes recibidos? La respuesta está en usar TCP en lugar de UDP.
+
+## TCP
+
+**TCP** (*Transmission Control Protocol*, Protocolo de Control de Transmisión) es un protocolo de transporte **orientado a conexión**. Utiliza varios mecanismos para garantizar la entrega fiable de los datos enviados por los distintos procesos de los hosts en red. Al igual que UDP, es un protocolo de capa 4. Al estar orientado a conexión, requiere establecer una conexión TCP antes de poder enviar cualquier dato.
+
+En TCP, cada octeto de datos tiene un **número de secuencia**, lo que facilita que el receptor identifique paquetes perdidos o duplicados. Por su parte, el receptor confirma la recepción de los datos con un **número de confirmación** (*acknowledgement number*)  que indica el último octeto recibido.
+
+## El saludo en tres pasos (*three-way handshake*)
+
+Una conexión TCP se establece mediante lo que se llama un *three-way handshake*. Se usan dos indicadores (*flags*): **SYN** (*Synchronise*, sincronizar) y **ACK** (*Acknowledgment*, confirmación). Los paquetes se envían así:
+
+| Paso | Paquete | Descripción |
+| ---- | ------- | ----------- |
+| **1** | **SYN** | El cliente inicia la conexión enviando un paquete SYN al servidor. Este paquete contiene el número de secuencia inicial, elegido al azar por el cliente. |
+| **2** | **SYN-ACK** | El servidor responde al paquete SYN con un paquete SYN-ACK, que añade el número de secuencia inicial elegido al azar por el servidor. |
+| **3** | **ACK** | El saludo en tres pasos se completa cuando el cliente envía un paquete ACK para confirmar la recepción del paquete SYN-ACK. |
+
+Al igual que UDP, TCP identifica el proceso que inicia o espera (*escucha*) una conexión mediante números de puerto. Como se indicó, un número de puerto válido va de **1 a 65535**, porque usa dos octetos, y el puerto 0 está reservado.
+
+## Comparativa: UDP vs. TCP
+
+| Característica | UDP | TCP |
+| -------------- | --- | --- |
+| **Conexión** | Sin conexión. | Orientado a conexión (requiere *three-way handshake*). |
+| **Fiabilidad** | No garantiza la entrega ni avisa de ella. | Garantiza la entrega mediante números de secuencia y confirmaciones. |
+| **Velocidad** | Más rápido. | Más lento por sus mecanismos de control. |
+| **Capa** | Capa 4 (transporte). | Capa 4 (transporte). |
+| **Identificación de procesos** | Puertos del 1 al 65535. | Puertos del 1 al 65535. |
+| **Analogía** | Correo estándar, sin confirmación de entrega. | Correo con confirmación de entrega. |
+
