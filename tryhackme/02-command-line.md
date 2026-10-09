@@ -1429,6 +1429,318 @@ Existen muchos tipos de shells en Linux. Veremos algunos de ellos y sus caracter
 | **Facilidad de uso** | Es menos amigable, pero al ser un shell tradicional y muy usado, sus usuarios están familiarizados y cómodos con él. | Es el shell más amigable. | Puede ser muy amigable con la personalización adecuada. |
 | **Resaltado de sintaxis** | No está disponible en este shell. | Viene integrado en el shell. | Se puede usar incorporando algunos plugins. |
 
-## ¿Cuál elegir?
+## Shell scripting y sus componentes
 
-Elegir el mejor shell de Linux depende del uso que le des y de sus características. Los shells vistos en esta tarea son solo algunos de los muchos que existen en Linux. Puedes comparar las funciones de los distintos shells y elegir el que mejor se adapte a tus tareas.
+Un script de shell no es más que un conjunto de comandos. En una tarea repetitiva te obliga a introducir varios comandos en un shell. En lugar de escribirlos uno por uno cada vez que repites la tarea, lo que puede costarte mucho tiempo, puedes combinarlos en un **script**. Para ejecutar todos esos comandos, solo tendrás que ejecutar el script y se ejecutarán todos a la vez. El scripting nos ayuda a **automatizar tareas**.
+
+Antes de aprender a escribir un script, conviene saber que, aunque los shells de Linux tengan capacidades de scripting, esto no significa que solo puedas crear scripts con un shell. El scripting también se puede hacer en varios lenguajes de programación.
+
+## Crear el archivo del script
+
+El primer paso es abrir la terminal y seleccionar un shell. Usaremos **bash**, el shell predeterminado y más utilizado en la mayoría de las distribuciones.
+
+A diferencia de los demás comandos que escribimos en el shell, primero debemos crear un archivo para el script con cualquier editor de texto. El archivo debe tener la extensión `.sh`, la extensión predeterminada de los scripts de bash. La siguiente terminal muestra la creación del archivo:
+
+**Crear el archivo del script**
+
+```
+user@tryhackme:~$ nano first_script.sh
+```
+
+## El shebang
+
+Todo script debe empezar con un **shebang**. El shebang es una combinación de caracteres que se añade al principio de un script, empezando por `#!` seguido del nombre del intérprete que se usará para ejecutarlo. Como estamos escribiendo nuestro script en bash, lo definimos como intérprete en el shebang.
+
+**first_script.sh**
+
+```
+#!/bin/bash
+```
+
+## Variables
+
+Una **variable** almacena un valor. Se necesitan usar varias veces en el script valores complejos, como una URL o la ruta de un archivo. En lugar de memorizarlos y escribirlos repetidamente, puedes guardarlos en una variable y usar su nombre donde lo necesites.
+
+El siguiente script muestra en pantalla la cadena «Hey, what's your name?» mediante el comando `echo`. La segunda línea contiene `read name`: `read` sirve para recibir una entrada del usuario y `name` es la variable donde se guardará. La última línea usa `echo` para mostrar un mensaje de bienvenida al usuario junto con el nombre almacenado en la variable.
+
+```
+#!/bin/bash
+echo "Hey, what’s your name?"
+read name
+echo "Welcome, $name"
+```
+
+Ahora guarda el script pulsando `CTRL+X`. Confirma pulsando `Y` y después `ENTER`.
+
+### Dar permisos de ejecución
+
+Para ejecutar el script, primero debemos asegurarnos de que tenga permisos de ejecución. Para concederlos, escribimos el siguiente comando en la terminal:
+
+**Permiso de ejecución al script**
+
+```
+user@tryhackme:~$ chmod +x first_script.sh
+```
+
+### Ejecutar el script
+
+Una vez que el script tiene permisos de ejecución, usa `./` antes del nombre del script para ejecutarlo. Usamos `./` en lugar de escribir directamente el nombre porque `./` le indica al shell que ejecute el archivo que está en el **directorio actual**. Si no escribes `./`, el shell buscará el script en la variable de entorno `PATH` (que contiene todos los directorios excepto el actual), no lo encontrará en ninguno de ellos y generará un error. La siguiente terminal muestra el script que usa variables:
+
+**Ejecución del script**
+
+```
+user@ubuntu:~$ ./first_script.sh
+Hey, What's your name?
+John
+Welcome, John
+```
+
+## Loops
+
+Para una explicación general de los bucles, escribamos uno que muestre en pantalla todos los números del 1 al 10. Primero, crea un archivo llamado `loop_script.sh` e introduce el siguiente código. Guarda el archivo pulsando `CTRL+X`, confirma con `y` y después `ENTER`.
+
+```
+#!/bin/bash
+for i in {1..10};
+do
+echo $i
+done
+```
+
+La primera línea usa la variable `i`, que iterará del 1 al 10 y ejecutará el código inferior en cada vuelta. `do` indica el inicio del código del bucle y `done` indica su final. Entre ambos se escribe el código que queremos ejecutar dentro del bucle. El bucle `for` toma cada número entre las llaves y lo asigna a la variable `i` en cada iteración. `echo $i` muestra el valor de esa variable en cada iteración.
+
+Ahora ejecutemos el script después de darle permisos de ejecución.
+
+**Ejecución del script**
+
+```
+user@tryhackme:~$ ./loop_script.sh
+1
+2
+
+10
+```
+
+## Sentencias condicionales
+
+Primero, crea un archivo llamado `conditional_script.sh` e introduce el siguiente código. Guarda el archivo pulsando `CTRL+X`, confirma con `y` y después `ENTER`.
+
+```
+#!/bin/bash
+echo "Please enter your name first:"
+read name
+if [ "$name" = "Flor" ]; then
+        echo "Welcome Flor! Here is the secret: THM_Script"
+else
+        echo "Sorry! You are not authorized to access the secret."
+fi
+```
+
+El script anterior toma el nombre del usuario como entrada y lo guarda en una variable (vista en la sección de variables). La sentencia condicional empieza con `if` y compara el valor de esa variable con la cadena `Flor`: si coincide, muestra el secreto al usuario y, si no, no lo muestra. `fi` se usa para cerrar la condición.
+
+A continuación, la terminal muestra la ejecución del script cuando el nombre coincide con el usuario autorizado definido en el script:
+
+**conditional_script.sh**
+
+```
+user@tryhackme:~$ ./conditional_script.sh
+Please enter your name first:
+Flor
+Welcome, Flor! Here is the secret: THM_Script
+```
+
+En cambio, la siguiente terminal muestra la ejecución cuando el nombre **no** coincide con el usuario autorizado:
+
+**conditional_script.sh**
+
+```shell-session
+user@tryhackme:~$ ./conditional_script.sh
+Please enter your name first:
+Alex
+Sorry! You are not authorized to access the secret.
+```
+
+## Comentarios
+
+Se escribe con el signo `#` seguido de un espacio y la frase que necesites. Por ejemplo, reescribamos el script de las sentencias condicionales añadiendo comentarios. Abre `conditional_script.sh` con `nano` y añade los comentarios empezando por el signo `#`. Guarda el archivo pulsando `CTRL+X`, confirma con `y` y después `ENTER`.
+
+```
+#!/bin/bash
+
+# Asking the user to enter a value.
+echo "Please enter your name first:"
+
+# Storing the user input value in a variable.
+read name
+
+# Checking if the name the user entered is equal to our required name.
+if [ "$name" = "Flor" ]; then
+
+# If it equals the required name, the following line will be displayed.
+echo "Welcome Flor! Here is the secret: THM_Script"
+
+# Defining the sentence to be displayed if the condition fails.
+else
+        echo "Sorry! You are not authorized to access the secret."
+fi
+```
+
+## El Locker Script
+
+Un usuario tiene un casillero en un banco. Para protegerlo, necesitamos un script que verifique la identidad del usuario antes de abrirlo. Al ejecutarse, el script debe pedir al usuario su **nombre**, el **nombre de su empresa** y su **PIN**. Si el usuario introduce los siguientes datos, se le debe permitir el acceso; en caso contrario, se le debe denegar.
+
+| Dato | Valor |
+| ---- | ----- |
+| Nombre de usuario | `John` |
+| Nombre de la empresa | `Tryhackme` |
+| PIN | `7385` |
+
+---
+
+## Script
+
+```
+#!/bin/bash 
+
+# Defining the variables
+username=""
+companyname=""
+pin=""
+
+# Defining the loop
+for i in {1..3}; do
+# Defining the conditional statements
+        if [ "$i" -eq 1 ]; then
+                echo "Enter your Username:"
+                read username
+        elif [ "$i" -eq 2 ]; then
+                echo "Enter your Company name:"
+                read companyname
+        else
+                echo "Enter your PIN:"
+                read pin
+        fi
+done
+
+# Checking if the user entered the correct details
+if [ "username"="John"]&&["companyname" = "Tryhackme" ] && [ "$pin" = "7385" ]; then
+        echo "Authentication Successful. You can now access your locker, John."
+else
+        echo "Authentication Denied!!"
+fi
+```
+
+### Cómo funciona
+
+- **Variables:** `username`, `companyname` y `pin` se inicializan vacías y guardarán los datos que introduzca el usuario.
+- **Loop:** el `for` se repite 3 veces, una por cada dato que se pide.
+- **Condicionales:** dentro del bucle, el `if` / `elif` / `else` decide qué pregunta mostrar según el valor de `i` (1 = usuario, 2 = empresa, 3 = PIN).
+- **Verificación final:** el último `if` comprueba con `&&` (Y lógico) que **los tres** datos sean correctos. Si falta alguno, se deniega el acceso.
+
+## Ejecución del script
+
+Recuerda dar permisos de ejecución al script antes de lanzarlo:
+
+```
+chmod +x locker_script.sh
+```
+
+**Ejecutar el script**
+
+```
+user@tryhackme:~$ ./locker_script.sh
+Enter your Username:
+John
+Enter your Company name:
+Tryhackme
+Enter your PIN:
+1349
+Authentication Denied!!
+```
+
+# Ejercicio práctico
+
+Hemos colocado un script en el directorio de usuario predeterminado `/home/user` de la máquina Ubuntu adjunta. Este script busca una palabra clave concreta en todos los archivos (con extensión `.log`) de un directorio específico.
+
+> **Nota:** hay que hacer algunos cambios dentro del archivo del script antes de ejecutarlo. Cuando abras la máquina siguiendo las instrucciones de la tarea 2, obtendrás una sesión como usuario normal. Sin embargo, recomendamos convertirte en usuario **root** para poder buscar la bandera (*flag*) en todos los archivos del directorio indicado. Para ello, solo tienes que escribir el siguiente comando e introducir la contraseña del usuario:
+
+**Convertirse en usuario root**
+
+```shell-session
+user@ubuntu:~$ sudo su
+[sudo] password for user: user@Tryhackme
+root@tryhackme:/home/user#
+```
+
+## Datos para modificar el script
+
+Puedes hacer los cambios en el archivo del script teniendo en cuenta los siguientes datos:
+
+| Dato | Valor |
+| ---- | ----- |
+| **Flag (bandera)** | `thm-flag01-script` |
+| **Directorio** | `/var/log` |
+
+> **Pista:** busca comillas dobles vacías `" "` dentro del archivo del script y rellénalas. Asegúrate de no dejar ningún espacio entre ellas.
+
+## Script completado
+
+```
+#!/bin/bash
+# nano flag_hunt.sh
+# Defining the directory to search our flag
+directory="/var/log"
+
+# Defining the flag to search
+flag="thm-flag01-script"
+
+echo "Flag search in directory: $directory in progress..."
+
+# Defining for loop to iterate over all the files with .log extension in the defined directory
+for file in "$directory"/*.log; do
+ # Check if the file contains the flag
+if grep -q "$flag" "$file"; then
+ # Print the filename
+echo "Flag found in: $(basename "$file")"
+fi
+done
+```
+
+### Cómo funciona
+
+- **`directory` y `flag`:** guardan el directorio donde se busca y la palabra clave que se quiere encontrar.
+- **`for file in "$directory"/*.log`:** recorre todos los archivos con extensión `.log` del directorio.
+- **`grep -q "$flag" "$file"`:** busca la palabra clave en el archivo. La opción `-q` (*quiet*) no imprime las coincidencias, solo devuelve si hubo alguna.
+- **`basename`:** muestra solo el nombre del archivo, sin la ruta completa.
+
+### Ejecutar el script
+
+Recuerda dar permisos de ejecución al script si aún no los tiene:
+
+```
+chmod +x flag_hunt.sh
+```
+
+Y ejecútalo:
+
+```
+./flag_hunt.sh
+```
+
+### Pregunta 1
+
+**¿Qué archivo contiene la palabra clave?**
+
+**Respuesta:** `authentication.log`
+
+### Pregunta 2
+
+**¿Dónde duerme el gato?**
+
+**Respuesta:** `under the table` (debajo de la mesa)
+
+Para encontrarlo, busca la palabra `cat` dentro del archivo que encontraste en la pregunta anterior:
+
+```
+grep "cat" /var/log/authentication.log
+```
