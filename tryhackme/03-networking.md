@@ -672,3 +672,61 @@ Esta sala ha repasado protocolos que usamos de forma directa o indirecta todos l
 | **NAT** | Compartir una IP pública entre muchos dispositivos. |
 | **Enrutamiento** | Elegir la mejor ruta entre redes (OSPF, EIGRP, BGP, RIP). |
 
+## DNS
+
+El **Sistema de Nombres de Dominio** (*Domain Name System*, **DNS**) se encarga de asignar correctamente un nombre de dominio a una dirección IP.
+
+DNS opera en la **capa de aplicación**, es decir, la capa 7 del modelo ISO OSI. El tráfico DNS usa por defecto el **puerto UDP 53** y, como alternativa por defecto, el **puerto TCP 53**.
+
+### Tipos de registros DNS
+
+Existen muchos tipos de registros DNS; sin embargo, en esta tarea nos centraremos en los cuatro siguientes:
+
+| Registro | Nombre | Descripción |
+| -------- | ------ | ----------- |
+| **A** | *Address* | Asigna un nombre de host a una o más direcciones **IPv4**. Por ejemplo, puedes configurar `example.com` para que resuelva a `172.17.2.172`. |
+| **AAAA** | *Quad-A* | Es similar al registro A, pero para **IPv6**. Recuerda que es AAAA (*quad-A*), ya que AA y AAA se referirían a un tamaño de pila; además, AAA se refiere a *Authentication, Authorization and Accounting* (autenticación, autorización y contabilidad). Ninguno de los dos pertenece a DNS. |
+| **CNAME** | *Canonical Name* | Asigna un nombre de dominio a otro nombre de dominio. Por ejemplo, `www.example.com` puede asignarse a `example.com` o incluso a `example.org`. |
+| **MX** | *Mail Exchange* | Especifica el servidor de correo responsable de gestionar los correos electrónicos de un dominio. |
+
+En otras palabras, cuando escribes `example.com` en tu navegador, este intenta resolver ese nombre de dominio consultando al servidor DNS por el **registro A**. En cambio, cuando intentas enviar un correo a `test@example.com`, el servidor de correo consulta al servidor DNS para encontrar el **registro MX**.
+
+
+## Consultar un dominio con `nslookup`
+
+Si quieres averiguar la dirección IP de un dominio desde la línea de comandos, puedes usar una herramienta como `nslookup`. Observa el ejemplo de la terminal siguiente, donde consultamos `example.com`.
+
+**Terminal**
+
+```
+user@TryHackMe$ nslookup www.example.com
+Server:         127.0.0.53
+Address:        127.0.0.53#53
+
+Non-authoritative answer:
+Name:   www.example.com
+Address: 93.184.215.14
+Name:   www.example.com
+Address: 2606:2800:21f:cb07:6820:80da:af6b:8b2c
+```
+
+### Captura de paquetes DNS
+
+La consulta anterior generó cuatro paquetes. En la terminal siguiente vemos que el primer y el tercer paquete envían consultas DNS para los registros **A** y **AAAA**, respectivamente. El segundo y el cuarto paquete muestran las respuestas a esas consultas DNS.
+
+**Terminal**
+
+```
+user@TryHackMe$ tshark -r dns-query.pcapng -Nn
+    1 0.000000000 192.168.66.89 → 192.168.66.1 DNS 86 Standard query 0x2e0f A www.example.com OPT
+    2 0.059049584 192.168.66.1 → 192.168.66.89 DNS 102 Standard query response 0x2e0f A www.example.com A 93.184.215.14 OPT
+    3 0.059721705 192.168.66.89 → 192.168.66.1 DNS 86 Standard query 0x96e1 AAAA www.example.com OPT
+    4 0.101568276 192.168.66.1 → 192.168.66.89 DNS 114 Standard query response 0x96e1 AAAA www.example.com AAAA 2606:2800:21f:cb07:6820:80da:af6b:8b2c OPT
+```
+
+| Paquete | Dirección | Tipo | Descripción |
+| ------- | --------- | ---- | ----------- |
+| **1** | Cliente → servidor DNS | Consulta | Pide el registro **A** (IPv4) de `www.example.com`. |
+| **2** | Servidor DNS → cliente | Respuesta | Devuelve `93.184.215.14`. |
+| **3** | Cliente → servidor DNS | Consulta | Pide el registro **AAAA** (IPv6) de `www.example.com`. |
+| **4** | Servidor DNS → cliente | Respuesta | Devuelve `2606:2800:21f:cb07:6820:80da:af6b:8b2c`. |
