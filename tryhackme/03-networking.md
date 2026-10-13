@@ -256,3 +256,225 @@ Al igual que UDP, TCP identifica el proceso que inicia o espera (*escucha*) una 
 | **Identificación de procesos** | Puertos del 1 al 65535. | Puertos del 1 al 65535. |
 | **Analogía** | Correo estándar, sin confirmación de entrega. | Correo con confirmación de entrega. |
 
+## Encapsulación
+
+En este contexto, la encapsulación se refiere al proceso por el cual cada capa añade una cabecera (*header*) y, a veces, un tráiler (*trailer*) a la unidad de datos recibida, y envía la unidad «encapsulada» a la capa inferior. La encapsulación es un concepto esencial porque permite que cada capa se centre en su función prevista.
+
+| Paso | Unidad de datos | Descripción |
+| ---- | --------------- | ----------- |
+| **1** | **Datos de aplicación** | Todo comienza cuando el usuario introduce en la aplicación los datos que quiere enviar. Por ejemplo, escribes un correo electrónico o un mensaje instantáneo y pulsas el botón de enviar. La aplicación da formato a estos datos y comienza a enviarlos según el protocolo de aplicación utilizado, mediante la capa inferior: la capa de transporte. |
+| **2** | **Segmento o datagrama del protocolo de transporte** | La capa de transporte, como TCP o UDP, añade la información de cabecera adecuada y crea el segmento TCP (o el datagrama UDP). Este segmento se envía a la capa inferior: la capa de red. |
+| **3** | **Paquete de red** | La capa de red, es decir, la capa de Internet, añade una cabecera IP al segmento TCP o datagrama UDP recibido. Después, este paquete IP se envía a la capa inferior: la capa de enlace de datos. |
+| **4** | **Trama de enlace de datos** | Ethernet o WiFi recibe el paquete IP y le añade la cabecera y el tráiler adecuados, creando una **trama** (*frame*). |
+
+Empezamos con los datos de aplicación. En la capa de transporte añadimos una cabecera TCP o UDP para crear un segmento TCP o un datagrama UDP. De nuevo, en la capa de red añadimos la cabecera IP adecuada para obtener un paquete IP que se pueda enrutar por Internet. Por último, añadimos la cabecera y el tráiler apropiados para obtener una trama WiFi o Ethernet en la capa de enlace.
+
+El proceso se invierte en el extremo receptor hasta que se extraen los datos de aplicación.
+
+## El ciclo de un paquete
+
+Consideremos el escenario en el que buscas una sala en TryHackMe.
+
+1. En la página de búsqueda de TryHackMe, introduces tu consulta y pulsas Enter.
+2. Tu navegador web, usando HTTPS, prepara una petición HTTP y la envía a la capa inferior: la capa de transporte.
+3. La capa TCP necesita establecer una conexión mediante un *three-way handshake* entre tu navegador y el servidor web de TryHackMe. Una vez establecida la conexión TCP, puede enviar la petición HTTP que contiene la consulta de búsqueda. Cada segmento TCP creado se envía a la capa inferior: la capa de Internet.
+4. La capa IP añade la dirección IP de origen (la de tu ordenador) y la dirección IP de destino (la del servidor web de TryHackMe). Para que este paquete llegue al router, tu portátil lo entrega a la capa inferior: la capa de enlace.
+5. Según el protocolo, la capa de enlace añade la cabecera y el tráiler de enlace adecuados, y el paquete se envía al router.
+6. El router elimina la cabecera y el tráiler de enlace, inspecciona la dirección IP de destino, entre otros campos, y enruta el paquete al enlace adecuado. Cada router repite este proceso hasta llegar al router del servidor de destino.
+
+Los pasos se invertirán cuando el paquete llegue al router de la red de destino. A medida que veamos más protocolos, volveremos a este ejercicio y crearemos una versión más detallada.
+
+## Resumen de la encapsulación
+
+| Capa | Unidad de datos | Qué se añade |
+| ---- | --------------- | ------------ |
+| Aplicación | Datos | Formato según el protocolo de aplicación. |
+| Transporte | Segmento (TCP) o datagrama (UDP) | Cabecera TCP o UDP (incluye los puertos). |
+| Red (Internet) | Paquete | Cabecera IP (direcciones IP de origen y destino). |
+| Enlace de datos | Trama (*frame*) | Cabecera y tráiler de Ethernet o WiFi. |
+
+## Telnet
+
+El protocolo **TELNET** (*Teletype Network*) es un protocolo de red para la conexión remota a una terminal. En palabras más simples, `telnet`, un cliente TELNET, te permite conectarte y comunicarte con un sistema remoto y ejecutar comandos de texto. Aunque en un principio se usaba para la administración remota, podemos usar `telnet` para conectarnos a cualquier servidor que esté escuchando en un puerto TCP.
+
+En la máquina objetivo del laboratorio se ejecutan distintos servicios:
+
+| Servidor | Puerto por defecto | Descripción |
+| -------- | ------------------ | ----------- |
+| **Servidor Echo** | `7` | Devuelve (hace eco de) todo lo que le envías. |
+| **Servidor Daytime** | `13` | Responde con la fecha y la hora actuales. |
+| **Servidor web (HTTP)** | `80` (TCP) | Sirve páginas web. |
+
+## Servidor Echo (puerto 7)
+
+En la terminal siguiente nos conectamos a la VM objetivo en el puerto TCP 7 del servidor Echo. Para cerrar la conexión, pulsa simultáneamente las teclas `CTRL` + `]`.
+
+**Terminal**
+
+```
+user@TryHackMe$ telnet MACHINE_IP 7
+telnet MACHINE_IP 7
+Trying MACHINE_IP...
+Connected to MACHINE_IP.
+Escape character is '^]'.
+Hi
+Hi
+How are you?
+How are you?
+Bye
+Bye
+^]
+
+telnet> quit
+Connection closed.
+```
+
+## Servidor Daytime (puerto 13)
+
+En la terminal siguiente usamos `telnet` para conectarnos al servidor Daytime, que escucha en el puerto 13. Observamos que la conexión se cierra en cuanto se devuelven la fecha y la hora actuales.
+
+**Terminal**
+
+```
+user@TryHackMe$ telnet MACHINE_IP 13
+Trying MACHINE_IP...
+Connected to MACHINE_IP.
+Escape character is '^]'.
+Thu Jun 20 12:36:32 PM UTC 2024
+Connection closed by foreign host.
+```
+
+## Servidor web HTTP (puerto 80)
+
+Por último, solicitemos una página web usando `telnet`. Después de conectarte al puerto 80, debes escribir el comando `GET / HTTP/1.1` e indicar el host, donde sirve cualquier valor, como `Host: telnet.thm`. A continuación, debes pulsar `Enter` dos veces para que la última línea introducida sea una línea en blanco. La salida siguiente muestra el intercambio. (La página se ha omitido).
+
+**Terminal**
+
+```
+user@TryHackMe$ telnet MACHINE_IP 80
+Trying MACHINE_IP...
+Connected to MACHINE_IP.
+Escape character is '^]'.
+GET / HTTP/1.1
+Host: telnet.thm
+
+HTTP/1.1 200 OK
+Content-Type: text/html
+[...]
+
+Connection closed by foreign host.
+```
+
+|Concepto | Qué es | Ejemplo | 
+| -------- | ------ | ------- | 
+| **Dirección IP** | Identificador lógico de un equipo en una red. Puede cambiar. | `192.168.66.133` | 
+| **Dirección MAC** | Identificador físico, grabado en la tarjeta de red. Normalmente no cambia. | `44:DF:65:D8:FE:6C` | 
+| **Capa 2 (enlace)** | Entrega de datos dentro de la misma red local, usando direcciones MAC. | Ethernet, WiFi | 
+| **Capa 3 (red)** | Entrega de datos entre redes distintas, usando direcciones IP. | IPv4, IPv6 | | **Puerto UDP** | Número que identifica a qué servicio o programa va dirigido un paquete. | `67`, `68` | 
+| **Broadcast (difusión)** | Mensaje enviado a *todos* los equipos de la red local. | `255.255.255.255` (IP) y `ff:ff:ff:ff:ff:ff` (MAC) | 
+
+## DHCP: cómo un equipo obtiene su configuración de red
+
+DHCP es un protocolo de **nivel de aplicación** que se apoya en **UDP**: el servidor escucha en el **puerto UDP 67** y el cliente envía desde el **puerto UDP 68**. El teléfono y el móvil están configurados para usar DHCP por defecto.
+
+| Elemento | Puerto UDP |
+| -------- | ---------- |
+| Servidor DHCP | `67` |
+| Cliente DHCP | `68` |
+
+En el protocolo DHCP, **DORA** son las siglas de *Discover*, *Offer*, *Request* y *Acknowledge*. DHCP sigue cuatro pasos:
+
+| Paso | Mensaje | Descripción |
+| ---- | ------- | ----------- |
+| **D**iscover | `DHCPDISCOVER` | El cliente envía un mensaje de difusión (*broadcast*) para buscar el servidor DHCP local, si existe. |
+| **O**ffer | `DHCPOFFER` | El servidor responde con un mensaje con una dirección IP disponible que el cliente puede aceptar. |
+| **R**equest | `DHCPREQUEST` | El cliente responde con un mensaje para indicar que ha aceptado la IP ofrecida. |
+| **A**cknowledge | `DHCPACK` | El servidor responde con un mensaje para confirmar que la dirección IP ofrecida ya está asignada a este cliente. |
+
+- **El `Transaction ID` es el mismo en los cuatro paquetes.** Sirve para saber que todos forman parte de la misma negociación. 
+- **El cliente empieza sin IP**, por eso los paquetes 1 y 3 salen desde `0.0.0.0`. 
+- **El servidor (`192.168.66.1`) ofrece la IP `192.168.66.133`** en el paquete 2 y la confirma en el 4.
+- Como el cliente todavía no tiene IP, usa `0.0.0.0` como origen y envía a la IP de difusión `255.255.255.255`.
+Al terminar el proceso, el equipo tiene, como mínimo: - **Dirección IP** para comunicarse dentro de la red. - **Máscara de subred**, que define qué direcciones son locales. - **Puerta de enlace** (*gateway*), normalmente el router, para salir a otras redes o a internet. - **Servidor DNS**, para traducir nombres como `ejemplo.com` a direcciones IP. - **Tiempo de concesión** (*lease time*), que indica cuánto tiempo puede usar esa IP antes de renovarla. 
+
+**Terminal**
+
+```
+user@TryHackMe$ tshark -r DHCP-G5000.pcap -n
+    1   0.000000      0.0.0.0 → 255.255.255.255 DHCP 342 DHCP Discover - Transaction ID 0xfb92d53f
+    2   0.013904 192.168.66.1 → 192.168.66.133 DHCP 376 DHCP Offer    - Transaction ID 0xfb92d53f
+    3   4.115318      0.0.0.0 → 255.255.255.255 DHCP 342 DHCP Request  - Transaction ID 0xfb92d53f
+    4   4.228117 192.168.66.1 → 192.168.66.133 DHCP 376 DHCP ACK      - Transaction ID 0xfb92d53f
+```
+
+En el intercambio de paquetes DHCP podemos observar lo siguiente:
+
+- El cliente empieza **sin ninguna configuración de red IP**. Solo tiene una dirección MAC. En los paquetes primero y tercero (*DHCP Discover* y *DHCP Request*), el cliente que busca un servidor DHCP sigue sin configuración IP y todavía no ha usado la dirección IP ofrecida por el servidor. Por eso envía los paquetes desde la dirección IP `0.0.0.0` a la dirección IP de difusión `255.255.255.255`.
+- En cuanto a la capa de enlace, en los paquetes primero y tercero el cliente envía a la dirección MAC de difusión, `ff:ff:ff:ff:ff:ff` (no se muestra en la salida anterior). El servidor DHCP ofrece una dirección IP disponible junto con la configuración de red en el *DHCP Offer*, y usa como destino la dirección MAC del cliente. (En este sistema de ejemplo, usó la dirección IP propuesta).
+
+¿Qué recibimos al final?
+
+Al final del proceso DHCP, nuestro dispositivo habrá recibido toda la configuración necesaria para acceder a la red, o incluso a internet. En concreto, esperamos que el servidor DHCP nos haya proporcionado lo siguiente:
+
+- La **dirección IP cedida** (*leased*) para acceder a los recursos de la red.
+- La **puerta de enlace** para enrutar nuestros paquetes fuera de la red local.
+- Un **servidor DNS** para resolver nombres de dominio (más sobre esto más adelante).
+
+## ARP, el puente entre el direccionamiento de capa 3 y el de capa 2
+
+Cuando un equipo quiere enviar datos a otro en la **misma red local**, debe construir una trama Ethernet o WiFi, y para eso necesita la **dirección MAC** del destino. Pero normalmente solo conoce su **IP**.
+
+Hay que distinguir dos situaciones: - Dentro de la **misma red**, los datos se entregan usando la MAC del destino. - Hacia **otras redes**, los datos se envían a la MAC del **router**, aunque la IP de destino sea otra. Por eso ARP solo es necesario mientras dos equipos se comunican en la misma red local.
+
+Cuando dos hosts se comunican por una red, un paquete IP se encapsula dentro de una **trama de enlace de datos** (*data link frame*) al viajar por la capa 2. Recuerda que las dos capas de enlace de datos más comunes son **Ethernet** (IEEE 802.3) y **WiFi** (IEEE 802.11). Siempre que un host necesita comunicarse con otro host en la misma red Ethernet o WiFi, debe enviar el paquete IP dentro de una trama de la capa de enlace de datos. Aunque conoce la dirección IP del host de destino, necesita averiguar su **dirección MAC** para poder crear la cabecera de enlace de datos adecuada.
+
+La dirección MAC es un número de 48 bits que suele representarse en notación hexadecimal; por ejemplo, `7C:DF:A1:D3:8C:5C` y `44:DF:65:D8:FE:6C` son dos direcciones MAC de mi red.
+
+## ¿Cuándo se necesitan las direcciones MAC?
+
+Los dispositivos de una misma red Ethernet no necesitan conocer las direcciones MAC de los demás en todo momento; solo las necesitan **mientras se comunican**. Todo gira en torno a las direcciones IP.
+
+Al conectar un dispositivo a una red y, si la red tiene un servidor DHCP, el dispositivo se configura automáticamente para usar una puerta de enlace (router) y un servidor DNS concreto. En consecuencia, el dispositivo conoce la dirección IP del servidor DNS para resolver cualquier nombre de dominio y la del router para cuando necesite enviar paquetes por internet. En todo este escenario no se revela ninguna dirección MAC. Sin embargo, dos dispositivos de la misma red Ethernet **no pueden comunicarse sin conocer las direcciones MAC del otro**.
+
+En un paquete IP dentro de una trama Ethernet. La cabecera de la trama Ethernet contiene:
+
+- Dirección MAC de destino.
+- Dirección MAC de origen.
+- Tipo (en este caso, IPv4).
+
+## El protocolo ARP
+
+El **Protocolo de Resolución de Direcciones** (*Address Resolution Protocol*, **ARP**) permite encontrar la dirección MAC de otro dispositivo de la red Ethernet.
+
+En el ejemplo siguiente, un host con la dirección IP `192.168.66.89` quiere comunicarse con otro sistema con la dirección IP `192.168.66.1`. Envía una **ARP Request** (petición ARP) pidiendo que responda el host con la dirección IP `192.168.66.1`. La petición ARP se envía desde la dirección MAC del solicitante a la dirección MAC de difusión (*broadcast*), `ff:ff:ff:ff:ff:ff`, como se ve en el primer paquete. Poco después llegó la **ARP Reply** (respuesta ARP): el host con la dirección IP `192.168.66.1` respondió con su dirección MAC. A partir de ese momento, los dos hosts pueden intercambiar tramas de la capa de enlace de datos.
+
+| Mensaje | Descripción |
+| ------- | ----------- |
+| **ARP Request** | «¿Quién tiene la IP `192.168.66.1`? Díselo a `192.168.66.89`». Se envía por difusión. |
+| **ARP Reply** | «La IP `192.168.66.1` está en `44:df:65:d8:fe:6c`». Se envía directamente al solicitante. |
+
+**Terminal**
+
+```
+user@TryHackMe$ tshark -r arp.pcapng -Nn
+    1 0.000000000 cc:5e:f8:02:21:a7 → ff:ff:ff:ff:ff:ff ARP 42 Who has 192.168.66.1? Tell 192.168.66.89
+    2 0.003566632 44:df:65:d8:fe:6c → cc:5e:f8:02:21:a7 ARP 42 192.168.66.1 is at 44:df:65:d8:fe:6c
+```
+
+Si usamos `tcpdump`, los paquetes se muestran de forma distinta. Utiliza los términos *ARP Request* y *ARP Reply*. A modo informativo, la salida se muestra en la terminal siguiente.
+
+**Terminal**
+
+```
+user@TryHackMe$ tcpdump -r arp.pcapng -n -v
+17:23:44.506615 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 192.168.66.1 tell 192.168.66.89, length 28
+17:23:44.510182 ARP, Ethernet (len 6), IPv4 (len 4), Reply 192.168.66.1 is-at 44:df:65:d8:fe:6c, length 28
+```
+
+## Encapsulación de ARP
+
+Una petición o respuesta ARP **no se encapsula dentro de un paquete UDP ni siquiera IP**; se encapsula **directamente dentro de una trama Ethernet**. La siguiente respuesta ARP lo muestra.
+
+ ¿Capa 2 o capa 3?
+
+ARP se considera de **capa 2** porque trabaja con direcciones MAC. Otros argumentan que forma parte de la **capa 3** porque da soporte a las operaciones IP. Lo importante es saber que ARP permite la **traducción del direccionamiento de capa 3 al direccionamiento de capa 2**.
