@@ -478,3 +478,197 @@ Una petición o respuesta ARP **no se encapsula dentro de un paquete UDP ni siqu
  ¿Capa 2 o capa 3?
 
 ARP se considera de **capa 2** porque trabaja con direcciones MAC. Otros argumentan que forma parte de la **capa 3** porque da soporte a las operaciones IP. Lo importante es saber que ARP permite la **traducción del direccionamiento de capa 3 al direccionamiento de capa 2**.
+
+## ICMP: diagnóstico de redes con ping y traceroute
+
+> ICMP (*Internet Control Message Protocol*) es un protocolo de la capa de red que se usa para diagnosticar redes e informar errores. Los comandos `ping` y `traceroute` lo usan para comprobar si un equipo responde y por qué ruta llegan los paquetes. En ciberseguridad, estas herramientas sirven tanto para administrar redes como para hacer reconocimiento.
+
+## Conceptos clave
+
+| Concepto | Qué es |
+| -------- | ------ |
+| **ICMP** | Protocolo de control que envía mensajes sobre el estado de la red. No transporta datos de aplicaciones. |
+| **Mensaje ICMP** | Va encapsulado dentro de un paquete IP. |
+| **Tipo ICMP** | Número que indica el propósito del mensaje (por ejemplo, 8 = solicitud de eco). |
+| **TTL** (*Time To Live*) | Campo del paquete IP que indica cuántos routers puede atravesar antes de descartarse. |
+| **RTT** (*Round-Trip Time*) | Tiempo que tarda un paquete en ir al destino y volver. |
+
+### Tipos de mensajes ICMP usados en este tema
+
+| Tipo | Nombre | Uso |
+| ---- | ------ | --- |
+| **8** | Echo Request | Enviado por `ping` para preguntar «¿estás vivo?». |
+| **0** | Echo Reply | Respuesta del equipo de destino a un Echo Request. |
+| **11** | Time Exceeded | Enviado por un router cuando el TTL llega a cero. |
+
+## Ping: comprobar si un equipo responde
+
+El comando `ping` envía un **ICMP Echo Request** (tipo 8) al destino. Si el destino está activo y accesible, responde con un **ICMP Echo Reply** (tipo 0). Con esto sabemos dos cosas: que el destino está encendido y que su respuesta puede llegar hasta nosotros.
+
+No recibir respuesta no siempre significa que el equipo esté apagado. Puede ocurrir que:
+
+- El equipo esté apagado o desconectado.
+- Un **firewall** en el camino bloquee los paquetes ICMP.
+- El equipo esté configurado para no responder a pings.
+
+### Ejemplo
+
+**Terminal**
+
+```
+user@TryHackMe$ ping 192.168.11.1 -c 4
+PING 192.168.11.1 (192.168.11.1) 56(84) bytes of data.
+64 bytes from 192.168.11.1: icmp_seq=1 ttl=63 time=11.2 ms
+64 bytes from 192.168.11.1: icmp_seq=2 ttl=63 time=3.81 ms
+64 bytes from 192.168.11.1: icmp_seq=3 ttl=63 time=3.99 ms
+64 bytes from 192.168.11.1: icmp_seq=4 ttl=63 time=23.4 ms
+
+--- 192.168.11.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 3.805/10.596/23.366/7.956 ms
+```
+
+La opción `-c 4` le indica a `ping` que envíe solo cuatro paquetes y luego se detenga.
+
+### Cómo leer la salida
+
+| Campo | Significado |
+| ----- | ----------- |
+| `icmp_seq` | Número de secuencia. Permite ver si hay paquetes perdidos o fuera de orden. |
+| `ttl` | TTL del paquete de respuesta. Un valor más bajo que el inicial suele indicar que pasó por más routers. |
+| `time` | RTT de ese paquete concreto. |
+| `packet loss` | Porcentaje de paquetes sin respuesta. Aquí es 0 %. |
+| `rtt min/avg/max/mdev` | Mínimo, media, máximo y desviación estándar de los tiempos. |
+
+## Traceroute: descubrir la ruta hasta el destino
+
+Cada paquete IP tiene un campo **TTL**. Cada router por el que pasa lo reduce en uno. Cuando el TTL llega a cero, el router descarta el paquete y envía un **ICMP Time Exceeded** (tipo 11) de vuelta al origen.
+
+Aquí el TTL cuenta **routers**, no segundos. `traceroute` aprovecha esto:
+
+1. Envía un paquete con TTL = 1. El primer router lo descarta y responde. Así conocemos el **salto 1**.
+2. Envía un paquete con TTL = 2. El segundo router responde. Así conocemos el **salto 2**.
+3. Repite aumentando el TTL hasta llegar al destino.
+
+### Ejemplo
+
+**Terminal**
+
+```
+user@TryHackMe$ traceroute example.com
+traceroute to example.com (93.184.215.14), 30 hops max, 60 byte packets
+ 1  _gateway (192.168.66.1)  4.414 ms  4.342 ms  4.320 ms
+ 2  192.168.11.1 (192.168.11.1)  5.849 ms  5.830 ms  5.811 ms
+ 3  100.104.0.1 (100.104.0.1)  11.130 ms  11.111 ms  11.093 ms
+ 4  10.149.1.45 (10.149.1.45)  6.156 ms  6.138 ms  6.120 ms
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  172.16.48.1 (172.16.48.1)  5.667 ms  8.165 ms  6.861 ms
+ 9  ae81.edge4.Marseille1.Level3.net (212.73.201.45)  50.811 ms  52.857 ms 213.242.116.233 (213.242.116.233)  52.798 ms
+10  NTT-level3-Marseille1.Level3.net (4.68.68.150)  93.351 ms  79.897 ms  79.804 ms
+11  ae-9.r20.parsfr04.fr.bb.gin.ntt.net (129.250.3.38)  62.935 ms  62.908 ms  64.313 ms
+12  ae-14.r21.nwrknj03.us.bb.gin.ntt.net (129.250.4.194)  141.816 ms  141.782 ms  141.757 ms
+13  ae-1.a02.nycmny17.us.bb.gin.ntt.net (129.250.3.17)  145.786 ms ae-1.a03.nycmny17.us.bb.gin.ntt.net (129.250.3.128)  141.701 ms  147.586 ms
+14  ce-0-3-0.a02.nycmny17.us.ce.gin.ntt.net (128.241.1.14)  148.692 ms ce-3-3-0.a03.nycmny17.us.ce.gin.ntt.net (128.241.1.90)  141.615 ms ce-0-3-0.a02.nycmny17.us.ce.gin.ntt.net (128.241.1.14)  148.168 ms
+15  ae-66.core1.nyd.edgecastcdn.net (152.195.69.133)  141.100 ms ae-65.core1.nyd.edgecastcdn.net (152.195.68.133)  140.360 ms ae-66.core1.nyd.edgecastcdn.net (152.195.69.133)  140.638 ms
+16  93.184.215.14 (93.184.215.14)  140.574 ms  140.543 ms  140.514 ms
+17  93.184.215.14 (93.184.215.14)  140.488 ms  139.397 ms  141.854 ms
+```
+
+### Cómo leer la salida
+
+- **Cada línea es un salto** (un router o equipo intermedio).
+- **Cada salto tiene tres tiempos**, porque `traceroute` envía tres sondas por salto.
+- **Los asteriscos (`* * *`)** significan que no llegó ninguna respuesta. El router puede estar configurado para no responder, o un firewall puede bloquear el mensaje. No significa necesariamente que el salto esté caído.
+- **Varias IP en una misma línea** indican que distintas sondas tomaron rutas diferentes.
+- **La ruta puede cambiar** entre ejecuciones.
+
+### Qué revela la salida
+
+- **IP privadas** (como `192.168.x.x` o `10.x.x.x`): suelen corresponder a equipos de la red local o del proveedor.
+- **IP públicas**: se pueden buscar para estimar el proveedor o la ubicación aproximada.
+- **Nombres de dominio** en los saltos: a veces indican el operador de red y la ciudad.
+
+## Relevancia para ciberseguridad
+
+- **Reconocimiento (*reconnaissance*):** un atacante puede usar `ping` para saber qué equipos están activos y `traceroute` para entender la topología de una red.
+- **Filtrado de ICMP:** muchos administradores bloquean ICMP en el firewall para ocultar equipos. Esto dificulta el diagnóstico y también el reconocimiento, pero no lo impide por completo.
+- **Fuga de información:** las respuestas `Time Exceeded` pueden revelar IP internas o nombres de equipos.
+- **Ping flood (inundación ICMP):** enviar grandes cantidades de paquetes ICMP para saturar un objetivo. Es un ataque de denegación de servicio (DoS).
+- **Diagnóstico legítimo:** los mismos comandos son las primeras herramientas que usa un técnico para averiguar si un problema está en la red local, en el proveedor o en el destino.
+
+
+| Herramienta | Pregunta que responde | Mensajes ICMP usados |
+| ----------- | --------------------- | -------------------- |
+| `ping` | ¿El destino responde y cuánto tarda? | Echo Request (8) y Echo Reply (0) |
+| `traceroute` | ¿Por qué routers pasan mis paquetes? | Time Exceeded (11) y respuesta final del destino |
+
+> **Nota:** en Linux y macOS, `traceroute` usa por defecto sondas UDP. Con la opción `-I` usa ICMP. En Windows, `tracert` usa ICMP.
+
+## Routing 
+
+> El **enrutamiento** permite que los routers decidan por qué camino enviar los datos dentro de una red o entre redes. **NAT** (*Network Address Translation*) permite que muchos equipos de una red privada compartan una sola dirección IP pública para salir a internet.
+
+## Protocolos de enrutamiento
+
+Los routers usan protocolos de enrutamiento para intercambiar información sobre la red y elegir la mejor ruta.
+
+| Protocolo | Nombre completo | Qué hace | Dónde se usa |
+| --------- | --------------- | -------- | ------------ |
+| **OSPF** | *Open Shortest Path First* | Calcula la ruta más corta compartiendo información sobre la topología de la red. | Redes empresariales |
+| **EIGRP** | *Enhanced Interior Gateway Routing Protocol* | Elige la mejor ruta usando varias métricas. Fue desarrollado por Cisco. | Redes internas con equipos Cisco |
+| **BGP** | *Border Gateway Protocol* | Permite a los proveedores de internet (ISP) intercambiar rutas entre sí. | Internet (entre redes autónomas) |
+| **RIP** | *Routing Information Protocol* | Elige la ruta con menos saltos (routers intermedios). Es sencillo. | Redes pequeñas |
+
+### Ejemplo
+
+OSPF se usa en redes empresariales para calcular la ruta más corta y eficiente entre equipos de distintas subredes.
+
+### Preguntas de repaso
+
+**¿Qué protocolo de los vistos es propietario de Cisco?**
+**Respuesta:** EIGRP.
+
+> **Nota:** Cisco publicó después una descripción de EIGRP como documento informativo (RFC 7868, 2016), por lo que hoy ya no es completamente cerrado. En el contexto de la sala de TryHackMe, la respuesta esperada sigue siendo EIGRP.
+
+## NAT: compartir una IP pública
+
+En IPv4 hay un número limitado de direcciones públicas. Con NAT, muchos dispositivos de una red privada (por ejemplo, `192.168.0.x`) pueden salir a internet usando una sola IP pública. Así se ahorran direcciones.
+
+### Ejemplo
+
+En una oficina con 50 computadoras, todas pueden acceder a internet a través de una única IP pública. El router registra qué equipo interno hizo cada petición y traduce la dirección para comunicarse con los servidores externos.
+
+### Cómo funciona
+
+El router mantiene una **tabla de traducción** que relaciona la IP interna y el puerto de origen con la IP pública y un puerto externo.
+
+Por ejemplo, un portátil con IP `192.168.0.129` abre una conexión TCP desde el puerto `15401`. El servidor web verá la conexión desde la IP pública `212.3.4.5` y el puerto `19273`, según la tabla de traducción. El cambio es transparente para el portátil y para el servidor.
+
+| IP interna : puerto | IP pública : puerto |
+| ------------------- | ------------------- |
+| `192.168.0.129 : 15401` | `212.3.4.5 : 19273` |
+
+> **Nota:** no pude ver el diagrama original. Las respuestas siguientes se basan en el texto y en la tabla de ejemplo.
+
+### Preguntas de repaso
+
+**En el diagrama, ¿qué IP pública usará el teléfono al acceder a internet?**
+**Respuesta:** `212.3.4.5`, porque es la IP pública que el router usa para todos los dispositivos internos.
+
+**Suponiendo que el router tiene potencia de procesamiento infinita, ¿aproximadamente cuántos miles de conexiones TCP simultáneas puede mantener?**
+**Respuesta:** unas 65 mil.
+
+**Por qué:** cada conexión externa necesita un puerto de origen distinto en la IP pública. Los puertos son números de 16 bits, así que hay 65 535 posibles. En la práctica, los puertos por debajo de 1024 se reservan para servicios conocidos, por lo que el número real es algo menor. El límite no depende de la potencia del router, sino del espacio de puertos.
+
+Esta sala ha repasado protocolos que usamos de forma directa o indirecta todos los días:
+
+| Protocolo o tema | Para qué sirve |
+| ---------------- | -------------- |
+| **ICMP** | Diagnóstico y reporte de errores (`ping`, `traceroute`). |
+| **DHCP** | Asignar automáticamente IP, puerta de enlace y DNS. |
+| **ARP** | Traducir una IP a una dirección MAC dentro de la red local. |
+| **NAT** | Compartir una IP pública entre muchos dispositivos. |
+| **Enrutamiento** | Elegir la mejor ruta entre redes (OSPF, EIGRP, BGP, RIP). |
+
